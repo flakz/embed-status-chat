@@ -303,13 +303,13 @@ const ss: Record<string, React.CSSProperties | ((...args: any[]) => React.CSSPro
     borderRadius: 8, fontSize: 13, color: "#065f46", lineHeight: 1.5,
   },
   productCard: {
-    display: "flex", gap: 12, background: "#fff", borderRadius: 12,
-    border: "1px solid #e5e7eb", padding: 12, maxWidth: 360,
+    display: "flex", gap: 10, background: "#fff", borderRadius: 12,
+    border: "1px solid #e5e7eb", padding: 8, maxWidth: 360,
     boxShadow: "0 1px 3px rgba(0,0,0,0.04)", alignItems: "center",
   },
   productImg: {
-    width: 72, height: 72, borderRadius: 8, objectFit: "contain" as const,
-    flexShrink: 0, background: "#f3f4f6",
+    width: 80, height: 80, borderRadius: 8, objectFit: "contain" as const,
+    flexShrink: 0,
   },
   productInfo: { flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 3 },
   productName: { fontSize: 14, fontWeight: 600, color: "#1e1e1e", lineHeight: 1.3 },
