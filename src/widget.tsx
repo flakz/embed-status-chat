@@ -480,6 +480,15 @@ function ChatWidget() {
                       );
                     })}
 
+                    {isLoading && (
+                      <motion.div layout key="loading-indicator" initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, scale: 0.9 }} transition={{ duration: 0.3 }}>
+                        <div style={ss.toolCard as React.CSSProperties}>
+                          <Loader2 size={14} className="marno-tool-spinner" style={{ color: PRIMARY_COLOR }} />
+                          <span>Thinking…</span>
+                        </div>
+                      </motion.div>
+                    )}
+
                     {!isLoading && messages.length === 2 && messages[0].role === "system" && (
                       <motion.div layout key="suggestions" initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10, filter: "blur(4px)", transition: { duration: 0.15 } }} transition={{ duration: 0.3, delay: 0.1, ease: "easeOut" }}>
                         <div style={ss.suggestions}>
