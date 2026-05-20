@@ -311,13 +311,15 @@ function ChatWidget() {
 
       // JSON response (non-streaming)
       const resp = await res.json();
-      const responseText = resp.response || resp.output || "";
+      let responseText = resp.response || resp.output || "";
 
       // Animate tool steps from response
       const steps = resp.steps || resp.intermediateSteps || [];
       if (steps.length > 0) {
-        for (let i = 0; i < steps.length; i++) {
-          const step = steps[i];
+        // Filter: only steps that actually have tool calls (not the final text step)
+        const toolSteps = steps.filter((s: any) => s.toolCalls && s.toolCalls.length > 0 && s.stepType !== "tool-result");
+        for (let i = 0; i < toolSteps.length; i++) {
+          const step = toolSteps[i];
           const toolCalls = step.toolCalls || [];
           for (const tc of toolCalls) {
             const toolName = tc.toolName || tc.tool_name || "unknown";
@@ -328,16 +330,29 @@ function ChatWidget() {
           }
         }
         await new Promise((r) => setTimeout(r, 300));
+
+        // If responseText is empty, try to get it from the last step
+        if (!responseText) {
+          for (let i = steps.length - 1; i >= 0; i--) {
+            if (steps[i].text) {
+              responseText = steps[i].text;
+              break;
+            }
+          }
+        }
       }
 
       setIsLoading(false);
-      const finalId = crypto.randomUUID();
-      const chars = responseText.split("");
-      let fullText = "";
-      for (let i = 0; i < chars.length; i += 2) {
-        fullText += chars[i] + (chars[i + 1] || "");
-        setMessages((prev) => prev.map((m) => (m.id === finalId ? { ...m, text: fullText } : m)));
-        await new Promise((r) => setTimeout(r, 10));
+      if (responseText) {
+        const finalId = crypto.randomUUID();
+        setMessages((prev) => [...prev, { id: finalId, role: "model", text: "" }]);
+        const chars = responseText.split("");
+        let fullText = "";
+        for (let i = 0; i < chars.length; i += 2) {
+          fullText += chars[i] + (chars[i + 1] || "");
+          setMessages((prev) => prev.map((m) => (m.id === finalId ? { ...m, text: fullText } : m)));
+          await new Promise((r) => setTimeout(r, 10));
+        }
       }
     } catch (error: any) {
       if (error.name === "AbortError") return;
