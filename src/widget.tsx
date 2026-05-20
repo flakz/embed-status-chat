@@ -81,34 +81,35 @@ type Message = { id: string; role: "user" | "model" | "system" | "tool"; text: s
 function toolIcon(name: string) {
   const lower = name.toLowerCase();
   if (lower.includes("search") || lower.includes("duck") || lower.includes("google") || lower.includes("scrappa")) return "🔍";
-  if (lower.includes("book") || lower.includes("calendar") || lower.includes("schedule") || lower.includes("event")) return "📅";
+  if (lower.includes("create_event") || lower.includes("book")) return "📅";
+  if (lower.includes("get_event") || lower.includes("calendar") || lower.includes("schedule")) return "📆";
   if (lower.includes("email") || lower.includes("mail")) return "📧";
   if (lower.includes("weather")) return "🌤️";
   if (lower.includes("database") || lower.includes("query")) return "🗄️";
   if (lower.includes("code") || lower.includes("api")) return "⚙️";
   if (lower.includes("image") || lower.includes("picture")) return "🖼️";
-  if (lower.includes("task") || lower.includes("todo")) return "✅";
+  if (lower.includes("create_task") || lower.includes("todo")) return "✅";
   return "🔧";
 }
 
 function toolLabel(name: string) {
   const lower = name.toLowerCase();
   if (lower === "search" || lower.includes("duck")) return `Searching…`;
-  if (lower.includes("book") || lower.includes("event")) return `Booking…`;
-  if (lower.includes("calendar")) return `Checking calendar…`;
+  if (lower.includes("create_event") || lower.includes("book")) return `Booking…`;
+  if (lower.includes("get_event") || lower.includes("calendar") || lower.includes("schedule")) return `Checking schedule…`;
   if (lower.includes("email")) return `Sending email…`;
   if (lower.includes("weather")) return `Getting weather…`;
-  if (lower.includes("task") || lower.includes("todo")) return `Creating task…`;
+  if (lower.includes("create_task") || lower.includes("todo")) return `Creating task…`;
   return `Running ${name}…`;
 }
 
 function toolDoneLabel(name: string) {
   const lower = name.toLowerCase();
   if (lower === "search" || lower.includes("duck")) return `Search complete`;
-  if (lower.includes("book") || lower.includes("event")) return `Appointment booked`;
-  if (lower.includes("calendar")) return `Calendar checked`;
+  if (lower.includes("create_event") || lower.includes("book")) return `Appointment booked`;
+  if (lower.includes("get_event") || lower.includes("calendar")) return `Schedule checked`;
   if (lower.includes("email")) return `Email sent`;
-  if (lower.includes("task") || lower.includes("todo")) return `Task created`;
+  if (lower.includes("create_task") || lower.includes("todo")) return `Task created`;
   return `${name} complete`;
 }
 
@@ -123,8 +124,8 @@ function extractToolData(toolName: string, toolResults: any[]): ToolGenData | un
 
       const lower = toolName.toLowerCase();
 
-      // Booking / event creation
-      if (lower.includes("book") || lower.includes("appointment") || lower.includes("event") || lower.includes("schedule") || lower.includes("calendar")) {
+      // Booking / event creation (only for create_event, not get_events)
+      if (lower.includes("create_event") || lower.includes("book") || lower.includes("appointment")) {
         const status = result.status || (result.confirmed ? "Confirmed" : (result.pending ? "Pending" : ""));
         const summary = result.summary || result.title || result.name || "";
         const description = result.description || result.details || result.confirmation_message || "";
@@ -136,13 +137,20 @@ function extractToolData(toolName: string, toolResults: any[]): ToolGenData | un
         if (status || summary || dateTime) {
           let dateStr = dateTime;
           let timeStr = "";
-          if (dateTime.includes("T")) {
-            const [d, t] = dateTime.split("T");
-            dateStr = d;
-            timeStr = t.slice(0, 5);
-          }
-          if (endTime && endTime.includes("T")) {
-            timeStr = `${timeStr} - ${endTime.split("T")[1].slice(0, 5)}`;
+          try {
+            const d = new Date(dateTime);
+            if (!isNaN(d.getTime())) {
+              dateStr = d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+              timeStr = d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true });
+            }
+          } catch {}
+          if (endTime) {
+            try {
+              const e = new Date(endTime);
+              if (!isNaN(e.getTime())) {
+                timeStr += " - " + e.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true });
+              }
+            } catch {}
           }
           return {
             type: "booking",
