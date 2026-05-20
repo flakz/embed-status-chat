@@ -145,6 +145,12 @@ const ss: Record<string, React.CSSProperties | ((...args: any[]) => React.CSSPro
     fontSize: 15, width: "fit-content" as const, maxWidth: "88%", lineHeight: 1.375,
     background: "#F0F2F5", color: "#1E1E1E", overflow: "hidden",
   },
+  thinking: {
+    display: "flex", alignItems: "center", gap: 8,
+    padding: "8px 16px", borderRadius: 12, borderBottomLeftRadius: 4,
+    fontSize: 15, width: "fit-content" as const, maxWidth: "88%",
+    background: "#F0F2F5", color: "#9ca3af",
+  },
   toolCard: {
     display: "flex", alignItems: "center", gap: 10,
     padding: "10px 14px", borderRadius: 12, borderBottomLeftRadius: 4,
