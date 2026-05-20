@@ -116,6 +116,16 @@ function toolDoneLabel(name: string) {
   return `${name} complete`;
 }
 
+function formatPrice(price: string | number): string {
+  const n = typeof price === "string" ? parseFloat(price) : price;
+  if (isNaN(n)) return String(price);
+  return `₹${n.toLocaleString("en-IN")}`;
+}
+
+function stripHtml(html: string): string {
+  return html.replace(/<[^>]*>/g, "").replace(/&amp;/g, "&").replace(/&nbsp;/g, " ").trim();
+}
+
 function extractToolData(toolName: string, toolResults: any[]): ToolGenData | undefined {
   if (!toolResults?.length) return undefined;
   for (const tr of toolResults) {
@@ -293,18 +303,18 @@ const ss: Record<string, React.CSSProperties | ((...args: any[]) => React.CSSPro
     borderRadius: 8, fontSize: 13, color: "#065f46", lineHeight: 1.5,
   },
   productCard: {
-    display: "flex", gap: 10, background: "#fff", borderRadius: 12,
-    border: "1px solid #e5e7eb", padding: 10, maxWidth: 320,
-    boxShadow: "0 1px 3px rgba(0,0,0,0.04)",
+    display: "flex", gap: 12, background: "#fff", borderRadius: 12,
+    border: "1px solid #e5e7eb", padding: 12, maxWidth: 360,
+    boxShadow: "0 1px 3px rgba(0,0,0,0.04)", alignItems: "center",
   },
   productImg: {
-    width: 56, height: 56, borderRadius: 8, objectFit: "cover" as const,
+    width: 72, height: 72, borderRadius: 8, objectFit: "cover" as const,
     flexShrink: 0, background: "#f3f4f6",
   },
-  productInfo: { flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 2 },
+  productInfo: { flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 3 },
   productName: { fontSize: 14, fontWeight: 600, color: "#1e1e1e", lineHeight: 1.3 },
   productPrice: { fontSize: 13, fontWeight: 700, color: PRIMARY_COLOR },
-  productDesc: { fontSize: 12, color: "#6b7280", lineHeight: 1.4, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" as const },
+  productDesc: { fontSize: 12, color: "#6b7280", lineHeight: 1.4, overflow: "hidden", WebkitLineClamp: 2, display: "-webkit-box", WebkitBoxOrient: "vertical" as const, maxHeight: 32 },
   suggestions: { display: "flex", flexWrap: "wrap" as const, gap: 8, marginTop: 8, width: "100%" },
   suggestBtn: {
     background: PRIMARY_LIGHT, color: PRIMARY_COLOR, border: "none",
@@ -630,8 +640,9 @@ function ChatWidget() {
                                       {item.image && <img src={item.image} alt={item.name} style={ss.productImg} />}
                                       <div style={ss.productInfo}>
                                         <div style={ss.productName}>{item.name}</div>
-                                        {item.price && <div style={ss.productPrice}>{item.price}</div>}
-                                        {item.description && <div style={ss.productDesc}>{item.description}</div>}
+                                        {item.price && <div style={ss.productPrice}>{formatPrice(item.price)}</div>}
+                                        {item.description && <div style={ss.productDesc}>{stripHtml(item.description)}</div>}
+                                        {item.link && <a href={item.link} target="_blank" style={{ fontSize: 12, color: PRIMARY_COLOR, textDecoration: "none", fontWeight: 500 }}>View product →</a>}
                                       </div>
                                     </div>
                                   ))}
