@@ -196,7 +196,7 @@ function extractToolData(toolName: string, toolResults: any[]): ToolGenData | un
                 name: item.title || item.name || item.product_name || "",
                 price: typeof item.variants?.[0]?.price === "string" ? item.variants[0].price : (item.price || item.cost || ""),
                 description: item.body_html || item.description || item.summary || item.vendor || "",
-                link: item.link || item.url || "",
+                link: item.handle ? `https://anarcx.in/products/${item.handle}` : (item.link || item.url || ""),
               })),
             },
           };
