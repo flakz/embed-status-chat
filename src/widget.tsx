@@ -9,6 +9,7 @@ declare global {
   interface Window {
     MarnoChatConfig?: {
       webhookUrl?: string;
+      statusUrl?: string;
       kbSlug?: string;
       brandName?: string;
       brandLogo?: string;
@@ -42,6 +43,7 @@ const PRIMARY_LIGHT = rgbToHex(
 );
 
 const WEBHOOK_URL = window.MarnoChatConfig?.webhookUrl || "https://n8n.marno.pro/webhook/marno-chat";
+const STATUS_URL = window.MarnoChatConfig?.statusUrl || "";
 const KB_SLUG = window.MarnoChatConfig?.kbSlug || "kbase";
 
 const SUGGESTIONS = window.MarnoChatConfig?.suggestions || [
@@ -247,45 +249,123 @@ function ChatWidget() {
     const userMsgObj: Message = { id: crypto.randomUUID(), role: "user", text: trimmed };
     setMessages((prev) => [...prev, userMsgObj]);
 
-    // Cancel any ongoing request
     abortRef.current?.abort();
     const controller = new AbortController();
     abortRef.current = controller;
 
     setIsLoading(true);
 
-    const modelMessageId = crypto.randomUUID();
+    const sessionId = sessionIdRef.current;
     const toolMessages: Map<string, Message> = new Map();
+    let lastStep = -1;
+
+    // Helper to apply intermediate events to messages
+    const applyEvent = (event: any) => {
+      if (!event || event.version !== 1) return;
+      if (event.step !== undefined && event.step <= lastStep) return;
+      lastStep = event.step;
+
+      if (event.toolCalls && event.toolCalls.length > 0) {
+        for (const tc of event.toolCalls) {
+          const toolId = tc.toolCallId || crypto.randomUUID();
+          const toolMsg: Message = {
+            id: toolId,
+            role: "tool",
+            text: toolLabel(tc.toolName),
+            toolName: tc.toolName,
+            toolDone: false,
+          };
+          toolMessages.set(toolId, toolMsg);
+          setMessages((prev) => [...prev, toolMsg]);
+        }
+      }
+      if (event.toolResults && event.toolResults.length > 0) {
+        for (const tr of event.toolResults) {
+          const existing = toolMessages.get(tr.toolCallId);
+          if (existing) {
+            setMessages((prev) =>
+              prev.map((m) => (m.id === existing.id ? { ...m, text: toolDoneLabel(tr.toolName), toolDone: true } : m))
+            );
+          } else {
+            setMessages((prev) => [
+              ...prev,
+              { id: tr.toolCallId || crypto.randomUUID(), role: "tool", text: toolDoneLabel(tr.toolName), toolName: tr.toolName, toolDone: true },
+            ]);
+          }
+        }
+      }
+    };
+
+    // Start polling if status URL is configured
+    let pollTimer: ReturnType<typeof setInterval> | null = null;
+    if (STATUS_URL) {
+      pollTimer = setInterval(async () => {
+        try {
+          const pollRes = await fetch(`${STATUS_URL}?sessionId=${sessionId}`, { signal: controller.signal });
+          if (pollRes.ok) {
+            const events = await pollRes.json();
+            const eventList = Array.isArray(events) ? events : [events];
+            for (const ev of eventList) applyEvent(ev);
+          }
+        } catch {}
+      }, 500);
+    }
 
     try {
       const res = await fetch(WEBHOOK_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ query: trimmed, sessionId: sessionIdRef.current, slug: KB_SLUG }),
+        body: JSON.stringify({ query: trimmed, sessionId, slug: KB_SLUG }),
         signal: controller.signal,
       });
 
       if (!res.ok) throw new Error(`Webhook returned ${res.status}`);
 
-      // Try streaming response first
+      // Stop polling
+      if (pollTimer) clearInterval(pollTimer);
+
+      // Read response — streaming or JSON
       const contentType = res.headers.get("content-type") || "";
+
       if (contentType.includes("application/json") || contentType.includes("text/html")) {
-        // Non-streaming fallback
         const resp = await res.json();
         const responseText = resp.response || resp.output || "";
+
+        // Also check response for intermediate steps embedded in the JSON
+        if (resp.intermediateSteps && Array.isArray(resp.intermediateSteps)) {
+          // Show tool progress from embedded steps
+          for (let i = 0; i < resp.intermediateSteps.length; i++) {
+            const step = resp.intermediateSteps[i];
+            if (step.action) {
+              const toolId = crypto.randomUUID();
+              const toolName = step.action.tool || "unknown";
+              setMessages((prev) => [
+                ...prev,
+                { id: toolId, role: "tool", text: toolLabel(toolName), toolName, toolDone: false },
+              ]);
+              await new Promise((r) => setTimeout(r, 600));
+              setMessages((prev) =>
+                prev.map((m) => (m.id === toolId ? { ...m, text: toolDoneLabel(toolName), toolDone: true } : m))
+              );
+            }
+          }
+          await new Promise((r) => setTimeout(r, 300));
+        }
+
         setIsLoading(false);
-        setMessages((prev) => [...prev, { id: modelMessageId, role: "model", text: "" }]);
+        setMessages((prev) => [...prev, { id: crypto.randomUUID(), role: "model", text: "" }]);
+        const finalId = crypto.randomUUID();
         const chars = responseText.split("");
         let fullText = "";
         for (let i = 0; i < chars.length; i += 2) {
           fullText += chars[i] + (chars[i + 1] || "");
-          setMessages((prev) => prev.map((m) => (m.id === modelMessageId ? { ...m, text: fullText } : m)));
+          setMessages((prev) => prev.map((m) => (m.id === finalId ? { ...m, text: fullText } : m)));
           await new Promise((r) => setTimeout(r, 10));
         }
         return;
       }
 
-      // Streaming response — read chunks
+      // Streaming response fallback
       const reader = res.body?.getReader();
       if (!reader) throw new Error("No response body");
 
@@ -297,137 +377,26 @@ function ChatWidget() {
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
-
         buffer += decoder.decode(value, { stream: true });
         const lines = buffer.split("\n");
         buffer = lines.pop() || "";
-
         for (const line of lines) {
           const trimmedLine = line.trim();
           if (!trimmedLine) continue;
-
           let event: any;
-          try {
-            event = JSON.parse(trimmedLine);
-          } catch {
-            // Plain text chunk — treat as streaming answer
-            if (!answerStarted) {
-              streamingAnswerId = crypto.randomUUID();
-              setMessages((prev) => [...prev, { id: streamingAnswerId, role: "model", text: "" }]);
-              answerStarted = true;
-            }
-            setMessages((prev) =>
-              prev.map((m) => (m.id === streamingAnswerId ? { ...m, text: m.text + trimmedLine } : m))
-            );
+          try { event = JSON.parse(trimmedLine); } catch {
+            if (!answerStarted) { streamingAnswerId = crypto.randomUUID(); setMessages((prev) => [...prev, { id: streamingAnswerId, role: "model", text: "" }]); answerStarted = true; }
+            setMessages((prev) => prev.map((m) => (m.id === streamingAnswerId ? { ...m, text: m.text + trimmedLine } : m)));
             continue;
           }
-
-          // Check for the new intermediate webhook format: { version, runId, step, toolCalls, toolResults, text, done }
-          if (event.version === 1 && event.runId) {
-            // Tool calls started
-            if (event.toolCalls && event.toolCalls.length > 0) {
-              for (const tc of event.toolCalls) {
-                const toolId = tc.toolCallId || crypto.randomUUID();
-                const toolMsg: Message = {
-                  id: toolId,
-                  role: "tool",
-                  text: toolLabel(tc.toolName),
-                  toolName: tc.toolName,
-                  toolDone: false,
-                };
-                toolMessages.set(toolId, toolMsg);
-                setMessages((prev) => [...prev, toolMsg]);
-              }
-            }
-
-            // Tool results arrived
-            if (event.toolResults && event.toolResults.length > 0) {
-              for (const tr of event.toolResults) {
-                const existing = toolMessages.get(tr.toolCallId);
-                if (existing) {
-                  const doneMsg: Message = {
-                    ...existing,
-                    text: toolDoneLabel(tr.toolName),
-                    toolDone: true,
-                  };
-                  setMessages((prev) => prev.map((m) => (m.id === existing.id ? doneMsg : m)));
-                } else {
-                  const toolId = tr.toolCallId || crypto.randomUUID();
-                  const doneMsg: Message = {
-                    id: toolId,
-                    role: "tool",
-                    text: toolDoneLabel(tr.toolName),
-                    toolName: tr.toolName,
-                    toolDone: true,
-                  };
-                  setMessages((prev) => [...prev, doneMsg]);
-                }
-              }
-            }
-
-            // Final text
-            if (event.done && event.text && event.text.trim()) {
-              setIsLoading(false);
-              const finalId = crypto.randomUUID();
-              setMessages((prev) => [...prev, { id: finalId, role: "model", text: "" }]);
-              const chars = event.text.split("");
-              let full = "";
-              for (let i = 0; i < chars.length; i += 2) {
-                full += chars[i] + (chars[i + 1] || "");
-                setMessages((prev) => prev.map((m) => (m.id === finalId ? { ...m, text: full } : m)));
-                await new Promise((r) => setTimeout(r, 10));
-              }
-            } else if (event.done) {
-              setIsLoading(false);
-            }
-
-            continue;
-          }
-
-          // Legacy streaming format: { type: "tool_start" | "tool_end" | "text" | "done" }
-          if (event.type === "tool_start") {
-            const toolId = crypto.randomUUID();
-            const toolMsg: Message = {
-              id: toolId,
-              role: "tool",
-              text: toolLabel(event.tool),
-              toolName: event.tool,
-              toolDone: false,
-            };
-            toolMessages.set(event.tool, toolMsg);
-            setMessages((prev) => [...prev, toolMsg]);
-          } else if (event.type === "tool_end") {
-            const existing = toolMessages.get(event.tool);
-            if (existing) {
-              setMessages((prev) =>
-                prev.map((m) =>
-                  m.id === existing.id ? { ...m, text: toolDoneLabel(event.tool), toolDone: true } : m
-                )
-              );
-            } else {
-              setMessages((prev) => [
-                ...prev,
-                { id: crypto.randomUUID(), role: "tool", text: toolDoneLabel(event.tool), toolName: event.tool, toolDone: true },
-              ]);
-            }
-          } else if (event.type === "text") {
-            if (!answerStarted) {
-              streamingAnswerId = crypto.randomUUID();
-              setMessages((prev) => [...prev, { id: streamingAnswerId, role: "model", text: "" }]);
-              answerStarted = true;
-            }
-            setMessages((prev) =>
-              prev.map((m) => (m.id === streamingAnswerId ? { ...m, text: m.text + event.text } : m))
-            );
-          } else if (event.type === "done") {
-            setIsLoading(false);
-          }
+          applyEvent(event);
+          if (event.done) setIsLoading(false);
         }
       }
-
       setIsLoading(false);
     } catch (error: any) {
       if (error.name === "AbortError") return;
+      if (pollTimer) clearInterval(pollTimer);
       console.error("Failed to send message:", error);
       setMessages((prev) => [
         ...prev,
