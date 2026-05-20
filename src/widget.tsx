@@ -446,7 +446,8 @@ function ChatWidget() {
                 }
               } else if (event.version === 1 && event.toolResults) {
                 for (const tr of event.toolResults) {
-                  setMessages((prev) => prev.map((m) => (m.role === "tool" && m.toolName === tr.toolName && !m.toolDone ? { ...m, text: toolDoneLabel(tr.toolName), toolDone: true } : m)));
+                  const genData = extractToolData(tr.toolName, [tr]);
+                  setMessages((prev) => prev.map((m) => (m.role === "tool" && m.toolName === tr.toolName && !m.toolDone ? { ...m, text: toolDoneLabel(tr.toolName), toolDone: true, toolData: genData } : m)));
                 }
               }
             }
