@@ -481,11 +481,8 @@ function ChatWidget() {
                     })}
 
                     {isLoading && (
-                      <motion.div layout key="loading-indicator" initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, scale: 0.9 }} transition={{ duration: 0.3 }}>
-                        <div style={ss.toolCard as React.CSSProperties}>
-                          <Loader2 size={14} className="marno-tool-spinner" style={{ color: PRIMARY_COLOR }} />
-                          <span>Thinking…</span>
-                        </div>
+                      <motion.div layout key="loading-indicator" initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, scale: 0.9, transition: { duration: 0.15 } }} transition={{ duration: 0.3, ease: "easeOut" }} style={{ marginTop: 12 }}>
+                        <div style={ss.thinking}><Loader2 size={16} style={{ animation: "marno-spin 1s linear infinite", color: "#6b7280" }} /><span>Thinking...</span></div>
                       </motion.div>
                     )}
 
