@@ -85,6 +85,7 @@ function toolIcon(name: string) {
   if (lower.includes("get_event") || lower.includes("calendar") || lower.includes("schedule")) return "📆";
   if (lower.includes("email") || lower.includes("mail")) return "📧";
   if (lower.includes("weather")) return "🌤️";
+  if (lower.includes("product") || lower.includes("shopify") || lower.includes("inventory") || lower.includes("store")) return "🛍️";
   if (lower.includes("database") || lower.includes("query")) return "🗄️";
   if (lower.includes("code") || lower.includes("api")) return "⚙️";
   if (lower.includes("image") || lower.includes("picture")) return "🖼️";
@@ -99,6 +100,7 @@ function toolLabel(name: string) {
   if (lower.includes("get_event") || lower.includes("calendar") || lower.includes("schedule")) return `Checking schedule…`;
   if (lower.includes("email")) return `Sending email…`;
   if (lower.includes("weather")) return `Getting weather…`;
+  if (lower.includes("product") || lower.includes("shopify") || lower.includes("inventory") || lower.includes("store")) return `Fetching products…`;
   if (lower.includes("create_task") || lower.includes("todo")) return `Creating task…`;
   return `Running ${name}…`;
 }
@@ -109,6 +111,7 @@ function toolDoneLabel(name: string) {
   if (lower.includes("create_event") || lower.includes("book")) return `Appointment booked`;
   if (lower.includes("get_event") || lower.includes("calendar")) return `Schedule checked`;
   if (lower.includes("email")) return `Email sent`;
+  if (lower.includes("product") || lower.includes("shopify") || lower.includes("inventory") || lower.includes("store")) return `Products loaded`;
   if (lower.includes("create_task") || lower.includes("todo")) return `Task created`;
   return `${name} complete`;
 }
@@ -165,19 +168,26 @@ function extractToolData(toolName: string, toolResults: any[]): ToolGenData | un
         }
       }
 
-      // Product search
-      if (lower.includes("product") || lower.includes("search_product") || lower.includes("inventory")) {
-        const items = Array.isArray(result.products) ? result.products : Array.isArray(result.items) ? result.items : Array.isArray(result) ? result : [];
+      // Shopify / product search
+      if (lower.includes("product") || lower.includes("shopify") || lower.includes("inventory")) {
+        let items: any[] = [];
+        if (Array.isArray(result)) {
+          items = result;
+        } else if (Array.isArray(result.products)) {
+          items = result.products;
+        } else if (Array.isArray(result.items)) {
+          items = result.items;
+        }
         if (items.length > 0) {
           return {
             type: "products",
             products: {
-              items: items.map((item: any) => ({
-                image: item.image || item.image_url || item.thumbnail || "",
-                name: item.name || item.title || item.product_name || "",
-                price: item.price || item.cost || "",
-                description: item.description || item.summary || "",
-                link: item.link || item.url || "",
+              items: items.slice(0, 6).map((item: any) => ({
+                image: item.image?.src || item.image || item.image_url || item.thumbnail || item.featured_image || "",
+                name: item.title || item.name || item.product_name || "",
+                price: typeof item.variants?.[0]?.price === "string" ? item.variants[0].price : (item.price || item.cost || ""),
+                description: item.body_html || item.description || item.summary || item.vendor || "",
+                link: item.handle ? `https://flamebearing.com/products/${item.handle}` : (item.link || item.url || ""),
               })),
             },
           };
