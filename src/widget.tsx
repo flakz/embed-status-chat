@@ -122,13 +122,12 @@ function extractToolData(toolName: string, toolResults: any[]): ToolGenData | un
     try {
       let result = typeof tr.result === "string" ? JSON.parse(tr.result) : tr.result;
       if (!result) continue;
-      // Unwrap array result (e.g., Google Calendar returns [event])
-      if (Array.isArray(result) && result.length > 0) result = result[0];
 
       const lower = toolName.toLowerCase();
 
-      // Booking / event creation (only for create_event, not get_events)
+      // Booking — unwrap single array result (Google Calendar returns [event])
       if (lower.includes("create_event") || lower.includes("book") || lower.includes("appointment")) {
+        if (Array.isArray(result) && result.length > 0) result = result[0];
         const status = result.status || (result.confirmed ? "Confirmed" : (result.pending ? "Pending" : ""));
         const summary = result.summary || result.title || result.name || "";
         const description = result.description || result.details || result.confirmation_message || "";
