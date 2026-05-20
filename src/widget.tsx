@@ -80,32 +80,35 @@ type Message = { id: string; role: "user" | "model" | "system" | "tool"; text: s
 
 function toolIcon(name: string) {
   const lower = name.toLowerCase();
-  if (lower.includes("search") || lower.includes("duck") || lower.includes("google")) return "🔍";
-  if (lower.includes("book") || lower.includes("calendar") || lower.includes("schedule")) return "📅";
+  if (lower.includes("search") || lower.includes("duck") || lower.includes("google") || lower.includes("scrappa")) return "🔍";
+  if (lower.includes("book") || lower.includes("calendar") || lower.includes("schedule") || lower.includes("event")) return "📅";
   if (lower.includes("email") || lower.includes("mail")) return "📧";
   if (lower.includes("weather")) return "🌤️";
   if (lower.includes("database") || lower.includes("query")) return "🗄️";
   if (lower.includes("code") || lower.includes("api")) return "⚙️";
   if (lower.includes("image") || lower.includes("picture")) return "🖼️";
+  if (lower.includes("task") || lower.includes("todo")) return "✅";
   return "🔧";
 }
 
 function toolLabel(name: string) {
   const lower = name.toLowerCase();
   if (lower === "search" || lower.includes("duck")) return `Searching…`;
-  if (lower.includes("book")) return `Booking appointment…`;
+  if (lower.includes("book") || lower.includes("event")) return `Booking…`;
   if (lower.includes("calendar")) return `Checking calendar…`;
   if (lower.includes("email")) return `Sending email…`;
   if (lower.includes("weather")) return `Getting weather…`;
+  if (lower.includes("task") || lower.includes("todo")) return `Creating task…`;
   return `Running ${name}…`;
 }
 
 function toolDoneLabel(name: string) {
   const lower = name.toLowerCase();
   if (lower === "search" || lower.includes("duck")) return `Search complete`;
-  if (lower.includes("book")) return `Appointment booked`;
+  if (lower.includes("book") || lower.includes("event")) return `Appointment booked`;
   if (lower.includes("calendar")) return `Calendar checked`;
   if (lower.includes("email")) return `Email sent`;
+  if (lower.includes("task") || lower.includes("todo")) return `Task created`;
   return `${name} complete`;
 }
 
@@ -113,21 +116,48 @@ function extractToolData(toolName: string, toolResults: any[]): ToolGenData | un
   if (!toolResults?.length) return undefined;
   for (const tr of toolResults) {
     try {
-      const result = typeof tr.result === "string" ? JSON.parse(tr.result) : tr.result;
+      let result = typeof tr.result === "string" ? JSON.parse(tr.result) : tr.result;
       if (!result) continue;
+      // Unwrap array result (e.g., Google Calendar returns [event])
+      if (Array.isArray(result) && result.length > 0) result = result[0];
+
       const lower = toolName.toLowerCase();
-      if (lower.includes("book") || lower.includes("appointment") || lower.includes("schedule")) {
-        return {
-          type: "booking",
-          booking: {
-            status: result.status || result.confirmed ? "Confirmed" : (result.pending ? "Pending" : ""),
-            date: result.date || result.appointment_date || "",
-            time: result.time || result.appointment_time || "",
-            name: result.name || result.customer_name || "",
-            details: result.details || result.confirmation_message || "",
-          },
-        };
+
+      // Booking / event creation
+      if (lower.includes("book") || lower.includes("appointment") || lower.includes("event") || lower.includes("schedule") || lower.includes("calendar")) {
+        const status = result.status || (result.confirmed ? "Confirmed" : (result.pending ? "Pending" : ""));
+        const summary = result.summary || result.title || result.name || "";
+        const description = result.description || result.details || result.confirmation_message || "";
+        const dateTime = result.start?.dateTime || result.start?.date || result.date || result.appointment_date || "";
+        const endTime = result.end?.dateTime || result.end?.date || "";
+        const timeZone = result.start?.timeZone || result.timezone || "";
+        const name = result.attendees?.[0]?.email || result.customer_name || result.client_name || "";
+
+        if (status || summary || dateTime) {
+          let dateStr = dateTime;
+          let timeStr = "";
+          if (dateTime.includes("T")) {
+            const [d, t] = dateTime.split("T");
+            dateStr = d;
+            timeStr = t.slice(0, 5);
+          }
+          if (endTime && endTime.includes("T")) {
+            timeStr = `${timeStr} - ${endTime.split("T")[1].slice(0, 5)}`;
+          }
+          return {
+            type: "booking",
+            booking: {
+              status: status || "Scheduled",
+              date: dateStr,
+              time: timeStr,
+              name: name || undefined,
+              details: description || summary || undefined,
+            },
+          };
+        }
       }
+
+      // Product search
       if (lower.includes("product") || lower.includes("search_product") || lower.includes("inventory")) {
         const items = Array.isArray(result.products) ? result.products : Array.isArray(result.items) ? result.items : Array.isArray(result) ? result : [];
         if (items.length > 0) {
