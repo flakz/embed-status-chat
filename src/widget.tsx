@@ -323,7 +323,7 @@ function ChatWidget() {
       const steps = resp.steps || resp.intermediateSteps || [];
       if (steps.length > 0) {
         // Filter: only steps that actually have tool calls (not the final text step)
-        const toolSteps = steps.filter((s: any) => s.toolCalls && s.toolCalls.length > 0 && s.stepType !== "tool-result");
+        const toolSteps = steps.filter((s: any) => s.toolCalls && s.toolCalls.length > 0);
         for (let i = 0; i < toolSteps.length; i++) {
           const step = toolSteps[i];
           const toolCalls = step.toolCalls || [];
