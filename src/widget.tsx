@@ -9,7 +9,6 @@ declare global {
   interface Window {
     MarnoChatConfig?: {
       webhookUrl?: string;
-      statusUrl?: string;
       kbSlug?: string;
       brandName?: string;
       brandLogo?: string;
@@ -43,7 +42,6 @@ const PRIMARY_LIGHT = rgbToHex(
 );
 
 const WEBHOOK_URL = window.MarnoChatConfig?.webhookUrl || "https://n8n.marno.pro/webhook/marno-chat";
-const STATUS_URL = window.MarnoChatConfig?.statusUrl || "";
 const KB_SLUG = window.MarnoChatConfig?.kbSlug || "kbase";
 
 const SUGGESTIONS = window.MarnoChatConfig?.suggestions || [
@@ -73,7 +71,7 @@ function toolIcon(name: string) {
 
 function toolLabel(name: string) {
   const lower = name.toLowerCase();
-  if (lower.includes("search") || lower.includes("duck")) return `Searching ${name}…`;
+  if (lower === "search" || lower.includes("duck")) return `Searching…`;
   if (lower.includes("book")) return `Booking appointment…`;
   if (lower.includes("calendar")) return `Checking calendar…`;
   if (lower.includes("email")) return `Sending email…`;
@@ -83,7 +81,7 @@ function toolLabel(name: string) {
 
 function toolDoneLabel(name: string) {
   const lower = name.toLowerCase();
-  if (lower.includes("search") || lower.includes("duck")) return `Search complete`;
+  if (lower === "search" || lower.includes("duck")) return `Search complete`;
   if (lower.includes("book")) return `Appointment booked`;
   if (lower.includes("calendar")) return `Calendar checked`;
   if (lower.includes("email")) return `Email sent`;
@@ -256,60 +254,6 @@ function ChatWidget() {
     setIsLoading(true);
 
     const sessionId = sessionIdRef.current;
-    const toolMessages: Map<string, Message> = new Map();
-    let lastStep = -1;
-
-    // Helper to apply intermediate events to messages
-    const applyEvent = (event: any) => {
-      if (!event || event.version !== 1) return;
-      if (event.step !== undefined && event.step <= lastStep) return;
-      lastStep = event.step;
-
-      if (event.toolCalls && event.toolCalls.length > 0) {
-        for (const tc of event.toolCalls) {
-          const toolId = tc.toolCallId || crypto.randomUUID();
-          const toolMsg: Message = {
-            id: toolId,
-            role: "tool",
-            text: toolLabel(tc.toolName),
-            toolName: tc.toolName,
-            toolDone: false,
-          };
-          toolMessages.set(toolId, toolMsg);
-          setMessages((prev) => [...prev, toolMsg]);
-        }
-      }
-      if (event.toolResults && event.toolResults.length > 0) {
-        for (const tr of event.toolResults) {
-          const existing = toolMessages.get(tr.toolCallId);
-          if (existing) {
-            setMessages((prev) =>
-              prev.map((m) => (m.id === existing.id ? { ...m, text: toolDoneLabel(tr.toolName), toolDone: true } : m))
-            );
-          } else {
-            setMessages((prev) => [
-              ...prev,
-              { id: tr.toolCallId || crypto.randomUUID(), role: "tool", text: toolDoneLabel(tr.toolName), toolName: tr.toolName, toolDone: true },
-            ]);
-          }
-        }
-      }
-    };
-
-    // Start polling if status URL is configured
-    let pollTimer: ReturnType<typeof setInterval> | null = null;
-    if (STATUS_URL) {
-      pollTimer = setInterval(async () => {
-        try {
-          const pollRes = await fetch(`${STATUS_URL}?sessionId=${sessionId}`, { signal: controller.signal });
-          if (pollRes.ok) {
-            const events = await pollRes.json();
-            const eventList = Array.isArray(events) ? events : [events];
-            for (const ev of eventList) applyEvent(ev);
-          }
-        } catch {}
-      }, 500);
-    }
 
     try {
       const res = await fetch(WEBHOOK_URL, {
@@ -321,87 +265,88 @@ function ChatWidget() {
 
       if (!res.ok) throw new Error(`Webhook returned ${res.status}`);
 
-      // Stop polling
-      if (pollTimer) clearInterval(pollTimer);
-
-      // Read response — streaming or JSON
       const contentType = res.headers.get("content-type") || "";
 
-      if (contentType.includes("application/json") || contentType.includes("text/html")) {
-        const resp = await res.json();
-        const responseText = resp.response || resp.output || "";
+      // Streaming response
+      if (!contentType.includes("application/json") && !contentType.includes("text/html")) {
+        const reader = res.body?.getReader();
+        if (reader) {
+          const decoder = new TextDecoder();
+          let buffer = "";
+          let streamingAnswerId = "";
+          let answerStarted = false;
+          const toolMessages: Map<string, Message> = new Map();
 
-        // Also check response for intermediate steps embedded in the JSON
-        if (resp.intermediateSteps && Array.isArray(resp.intermediateSteps)) {
-          // Show tool progress from embedded steps
-          for (let i = 0; i < resp.intermediateSteps.length; i++) {
-            const step = resp.intermediateSteps[i];
-            if (step.action) {
-              const toolId = crypto.randomUUID();
-              const toolName = step.action.tool || "unknown";
-              setMessages((prev) => [
-                ...prev,
-                { id: toolId, role: "tool", text: toolLabel(toolName), toolName, toolDone: false },
-              ]);
-              await new Promise((r) => setTimeout(r, 600));
-              setMessages((prev) =>
-                prev.map((m) => (m.id === toolId ? { ...m, text: toolDoneLabel(toolName), toolDone: true } : m))
-              );
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            buffer += decoder.decode(value, { stream: true });
+            const lines = buffer.split("\n");
+            buffer = lines.pop() || "";
+            for (const line of lines) {
+              const trimmedLine = line.trim();
+              if (!trimmedLine) continue;
+              let event: any;
+              try { event = JSON.parse(trimmedLine); } catch {
+                if (!answerStarted) { streamingAnswerId = crypto.randomUUID(); setMessages((prev) => [...prev, { id: streamingAnswerId, role: "model", text: "" }]); answerStarted = true; }
+                setMessages((prev) => prev.map((m) => (m.id === streamingAnswerId ? { ...m, text: m.text + trimmedLine } : m)));
+                continue;
+              }
+              if (event.version === 1 && event.toolCalls) {
+                for (const tc of event.toolCalls) {
+                  const toolId = tc.toolCallId || crypto.randomUUID();
+                  setMessages((prev) => [...prev, { id: toolId, role: "tool", text: toolLabel(tc.toolName), toolName: tc.toolName, toolDone: false }]);
+                }
+              } else if (event.version === 1 && event.toolResults) {
+                for (const tr of event.toolResults) {
+                  setMessages((prev) => prev.map((m) => (m.role === "tool" && m.toolName === tr.toolName && !m.toolDone ? { ...m, text: toolDoneLabel(tr.toolName), toolDone: true } : m)));
+                }
+              }
             }
           }
-          await new Promise((r) => setTimeout(r, 300));
+          setIsLoading(false);
+          return;
         }
-
-        setIsLoading(false);
-        setMessages((prev) => [...prev, { id: crypto.randomUUID(), role: "model", text: "" }]);
-        const finalId = crypto.randomUUID();
-        const chars = responseText.split("");
-        let fullText = "";
-        for (let i = 0; i < chars.length; i += 2) {
-          fullText += chars[i] + (chars[i + 1] || "");
-          setMessages((prev) => prev.map((m) => (m.id === finalId ? { ...m, text: fullText } : m)));
-          await new Promise((r) => setTimeout(r, 10));
-        }
-        return;
       }
 
-      // Streaming response fallback
-      const reader = res.body?.getReader();
-      if (!reader) throw new Error("No response body");
+      // JSON response (non-streaming)
+      const resp = await res.json();
+      const responseText = resp.response || resp.output || "";
 
-      const decoder = new TextDecoder();
-      let buffer = "";
-      let streamingAnswerId = "";
-      let answerStarted = false;
-
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        buffer += decoder.decode(value, { stream: true });
-        const lines = buffer.split("\n");
-        buffer = lines.pop() || "";
-        for (const line of lines) {
-          const trimmedLine = line.trim();
-          if (!trimmedLine) continue;
-          let event: any;
-          try { event = JSON.parse(trimmedLine); } catch {
-            if (!answerStarted) { streamingAnswerId = crypto.randomUUID(); setMessages((prev) => [...prev, { id: streamingAnswerId, role: "model", text: "" }]); answerStarted = true; }
-            setMessages((prev) => prev.map((m) => (m.id === streamingAnswerId ? { ...m, text: m.text + trimmedLine } : m)));
-            continue;
+      // Animate tool steps from response
+      const steps = resp.steps || resp.intermediateSteps || [];
+      if (steps.length > 0) {
+        for (let i = 0; i < steps.length; i++) {
+          const step = steps[i];
+          const toolCalls = step.toolCalls || [];
+          for (const tc of toolCalls) {
+            const toolName = tc.toolName || tc.tool_name || "unknown";
+            const toolId = crypto.randomUUID();
+            setMessages((prev) => [...prev, { id: toolId, role: "tool", text: toolLabel(toolName), toolName, toolDone: false }]);
+            await new Promise((r) => setTimeout(r, 600));
+            setMessages((prev) => prev.map((m) => (m.id === toolId ? { ...m, text: toolDoneLabel(toolName), toolDone: true } : m)));
           }
-          applyEvent(event);
-          if (event.done) setIsLoading(false);
         }
+        await new Promise((r) => setTimeout(r, 300));
       }
+
       setIsLoading(false);
+      const finalId = crypto.randomUUID();
+      const chars = responseText.split("");
+      let fullText = "";
+      for (let i = 0; i < chars.length; i += 2) {
+        fullText += chars[i] + (chars[i + 1] || "");
+        setMessages((prev) => prev.map((m) => (m.id === finalId ? { ...m, text: fullText } : m)));
+        await new Promise((r) => setTimeout(r, 10));
+      }
     } catch (error: any) {
       if (error.name === "AbortError") return;
-      if (pollTimer) clearInterval(pollTimer);
       console.error("Failed to send message:", error);
       setMessages((prev) => [
         ...prev,
         { id: crypto.randomUUID(), role: "model", text: "I'm sorry, I encountered an error. Please check your connection or try again later." },
       ]);
+    } finally {
       setIsLoading(false);
     }
   };
