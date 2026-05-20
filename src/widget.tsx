@@ -196,7 +196,7 @@ function extractToolData(toolName: string, toolResults: any[]): ToolGenData | un
                 name: item.title || item.name || item.product_name || "",
                 price: typeof item.variants?.[0]?.price === "string" ? item.variants[0].price : (item.price || item.cost || ""),
                 description: item.body_html || item.description || item.summary || item.vendor || "",
-                link: item.handle ? `https://flamebearing.com/products/${item.handle}` : (item.link || item.url || ""),
+                link: item.link || item.url || "",
               })),
             },
           };
@@ -308,7 +308,7 @@ const ss: Record<string, React.CSSProperties | ((...args: any[]) => React.CSSPro
     boxShadow: "0 1px 3px rgba(0,0,0,0.04)", alignItems: "center",
   },
   productImg: {
-    width: 72, height: 72, borderRadius: 8, objectFit: "cover" as const,
+    width: 72, height: 72, borderRadius: 8, objectFit: "contain" as const,
     flexShrink: 0, background: "#f3f4f6",
   },
   productInfo: { flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 3 },
