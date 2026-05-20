@@ -55,7 +55,28 @@ const SUGGESTIONS = window.MarnoChatConfig?.suggestions || [
 const GREETING_1 = window.MarnoChatConfig?.greetings?.[0] || "Hi there! I'm an AI agent trained on docs, help articles, and other important content.";
 const GREETING_2 = window.MarnoChatConfig?.greetings?.[1] || "How can I best help you today?";
 
-type Message = { id: string; role: "user" | "model" | "system" | "tool"; text: string; toolName?: string; toolDone?: boolean };
+type ToolGenData = {
+  type?: string;
+  booking?: {
+    status: string;
+    date: string;
+    time: string;
+    name?: string;
+    details?: string;
+  };
+  products?: {
+    items: {
+      image?: string;
+      name: string;
+      price?: string;
+      description?: string;
+      link?: string;
+    }[];
+  };
+  [key: string]: any;
+};
+
+type Message = { id: string; role: "user" | "model" | "system" | "tool"; text: string; toolName?: string; toolDone?: boolean; toolData?: ToolGenData };
 
 function toolIcon(name: string) {
   const lower = name.toLowerCase();
@@ -86,6 +107,47 @@ function toolDoneLabel(name: string) {
   if (lower.includes("calendar")) return `Calendar checked`;
   if (lower.includes("email")) return `Email sent`;
   return `${name} complete`;
+}
+
+function extractToolData(toolName: string, toolResults: any[]): ToolGenData | undefined {
+  if (!toolResults?.length) return undefined;
+  for (const tr of toolResults) {
+    try {
+      const result = typeof tr.result === "string" ? JSON.parse(tr.result) : tr.result;
+      if (!result) continue;
+      const lower = toolName.toLowerCase();
+      if (lower.includes("book") || lower.includes("appointment") || lower.includes("schedule")) {
+        return {
+          type: "booking",
+          booking: {
+            status: result.status || result.confirmed ? "Confirmed" : (result.pending ? "Pending" : ""),
+            date: result.date || result.appointment_date || "",
+            time: result.time || result.appointment_time || "",
+            name: result.name || result.customer_name || "",
+            details: result.details || result.confirmation_message || "",
+          },
+        };
+      }
+      if (lower.includes("product") || lower.includes("search_product") || lower.includes("inventory")) {
+        const items = Array.isArray(result.products) ? result.products : Array.isArray(result.items) ? result.items : Array.isArray(result) ? result : [];
+        if (items.length > 0) {
+          return {
+            type: "products",
+            products: {
+              items: items.map((item: any) => ({
+                image: item.image || item.image_url || item.thumbnail || "",
+                name: item.name || item.title || item.product_name || "",
+                price: item.price || item.cost || "",
+                description: item.description || item.summary || "",
+                link: item.link || item.url || "",
+              })),
+            },
+          };
+        }
+      }
+    } catch {}
+  }
+  return undefined;
 }
 
 const ss: Record<string, React.CSSProperties | ((...args: any[]) => React.CSSProperties)> = {
@@ -165,6 +227,37 @@ const ss: Record<string, React.CSSProperties | ((...args: any[]) => React.CSSPro
     background: "#ECFDF5", color: "#065F46",
     border: "1px solid #A7F3D0",
   },
+  bookingCard: {
+    background: "#fff", borderRadius: 14, border: "1px solid #e5e7eb",
+    padding: 14, maxWidth: 320, boxShadow: "0 1px 3px rgba(0,0,0,0.04)",
+  },
+  bookingHeader: {
+    display: "flex", alignItems: "center", gap: 8, marginBottom: 10,
+  },
+  bookingTitle: { fontWeight: 600, fontSize: 15, color: "#1e1e1e" },
+  bookingRow: {
+    display: "flex", justifyContent: "space-between", alignItems: "center",
+    padding: "6px 0", borderBottom: "1px solid #f3f4f6",
+  },
+  bookingLabel: { fontSize: 13, color: "#6b7280" },
+  bookingValue: { fontSize: 13, fontWeight: 500, color: "#1e1e1e" },
+  bookingDetail: {
+    marginTop: 10, padding: "8px 10px", background: "#f0fdf4",
+    borderRadius: 8, fontSize: 13, color: "#065f46", lineHeight: 1.5,
+  },
+  productCard: {
+    display: "flex", gap: 10, background: "#fff", borderRadius: 12,
+    border: "1px solid #e5e7eb", padding: 10, maxWidth: 320,
+    boxShadow: "0 1px 3px rgba(0,0,0,0.04)",
+  },
+  productImg: {
+    width: 56, height: 56, borderRadius: 8, objectFit: "cover" as const,
+    flexShrink: 0, background: "#f3f4f6",
+  },
+  productInfo: { flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 2 },
+  productName: { fontSize: 14, fontWeight: 600, color: "#1e1e1e", lineHeight: 1.3 },
+  productPrice: { fontSize: 13, fontWeight: 700, color: PRIMARY_COLOR },
+  productDesc: { fontSize: 12, color: "#6b7280", lineHeight: 1.4, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" as const },
   suggestions: { display: "flex", flexWrap: "wrap" as const, gap: 8, marginTop: 8, width: "100%" },
   suggestBtn: {
     background: PRIMARY_LIGHT, color: PRIMARY_COLOR, border: "none",
@@ -327,12 +420,14 @@ function ChatWidget() {
         for (let i = 0; i < toolSteps.length; i++) {
           const step = toolSteps[i];
           const toolCalls = step.toolCalls || [];
+          const toolResults = step.toolResults || [];
           for (const tc of toolCalls) {
             const toolName = tc.toolName || tc.tool_name || "unknown";
             const toolId = crypto.randomUUID();
-            setMessages((prev) => [...prev, { id: toolId, role: "tool", text: toolLabel(toolName), toolName, toolDone: false }]);
+            const genData = extractToolData(toolName, toolResults);
+            setMessages((prev) => [...prev, { id: toolId, role: "tool", text: toolLabel(toolName), toolName, toolDone: false, toolData: genData }]);
             await new Promise((r) => setTimeout(r, 600));
-            setMessages((prev) => prev.map((m) => (m.id === toolId ? { ...m, text: toolDoneLabel(toolName), toolDone: true } : m)));
+            setMessages((prev) => prev.map((m) => (m.id === toolId ? { ...m, text: toolDoneLabel(toolName), toolDone: true, toolData: genData } : m)));
           }
         }
         await new Promise((r) => setTimeout(r, 300));
@@ -432,6 +527,7 @@ function ChatWidget() {
                       // Tool progress cards
                       if (isTool) {
                         const cardStyle = msg.toolDone ? ss.toolCardDone : ss.toolCard;
+                        const genData = msg.toolData;
                         return (
                           <motion.div
                             layout
@@ -451,6 +547,48 @@ function ChatWidget() {
                                 )}
                                 <span>{msg.toolDone ? msg.text : `${toolIcon(msg.toolName || "")} ${msg.text}`}</span>
                               </div>
+
+                              {/* Generative UI: Booking confirmation */}
+                              {genData?.type === "booking" && genData.booking && msg.toolDone && (
+                                <motion.div
+                                  initial={{ opacity: 0, y: 8 }}
+                                  animate={{ opacity: 1, y: 0 }}
+                                  transition={{ delay: 0.2, duration: 0.3 }}
+                                  style={{ marginTop: 6 }}
+                                >
+                                  <div style={ss.bookingCard}>
+                                    <div style={ss.bookingHeader}>
+                                      <span style={{ fontSize: 18 }}>📅</span>
+                                      <span style={ss.bookingTitle}>Appointment {genData.booking.status}</span>
+                                    </div>
+                                    {genData.booking.name && <div style={ss.bookingRow}><span style={ss.bookingLabel}>Name</span><span style={ss.bookingValue}>{genData.booking.name}</span></div>}
+                                    {genData.booking.date && <div style={ss.bookingRow}><span style={ss.bookingLabel}>Date</span><span style={ss.bookingValue}>{genData.booking.date}</span></div>}
+                                    {genData.booking.time && <div style={ss.bookingRow}><span style={ss.bookingLabel}>Time</span><span style={ss.bookingValue}>{genData.booking.time}</span></div>}
+                                    {genData.booking.details && <div style={ss.bookingDetail}>{genData.booking.details}</div>}
+                                  </div>
+                                </motion.div>
+                              )}
+
+                              {/* Generative UI: Product cards */}
+                              {genData?.type === "products" && genData.products?.items.length > 0 && msg.toolDone && (
+                                <motion.div
+                                  initial={{ opacity: 0, y: 8 }}
+                                  animate={{ opacity: 1, y: 0 }}
+                                  transition={{ delay: 0.2, duration: 0.3 }}
+                                  style={{ marginTop: 6, display: "flex", flexDirection: "column", gap: 6 }}
+                                >
+                                  {genData.products.items.map((item, idx) => (
+                                    <div key={idx} style={ss.productCard}>
+                                      {item.image && <img src={item.image} alt={item.name} style={ss.productImg} />}
+                                      <div style={ss.productInfo}>
+                                        <div style={ss.productName}>{item.name}</div>
+                                        {item.price && <div style={ss.productPrice}>{item.price}</div>}
+                                        {item.description && <div style={ss.productDesc}>{item.description}</div>}
+                                      </div>
+                                    </div>
+                                  ))}
+                                </motion.div>
+                              )}
                             </div>
                           </motion.div>
                         );
