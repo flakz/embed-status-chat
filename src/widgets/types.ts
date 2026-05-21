@@ -13,6 +13,7 @@ export type Booking = {
   attendees?: string;
   description?: string;
   status: string;
+  meet_url?: string;
 };
 
 export type CalendarEvent = {

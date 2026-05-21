@@ -1,6 +1,6 @@
 import React from "react";
 import { motion } from "motion/react";
-import { ss } from "../styles";
+import { ss, PRIMARY_COLOR } from "../styles";
 import type { Booking } from "../types";
 
 function fmtDate(dateStr: string) {
@@ -37,10 +37,17 @@ export default function BookingCard({ booking }: { booking: Booking }) {
             {booking.status}
           </span>
         </div>
-        {booking.attendees && <div style={ss.bookingRow}><span style={ss.bookingLabel}>Attendee</span><span style={ss.bookingValue}>{booking.attendees}</span></div>}
+        {booking.attendees && <div style={ss.bookingRow}><span style={ss.bookingLabel}>Attendees</span><span style={ss.bookingValue}>{booking.attendees}</span></div>}
         {booking.start && <div style={ss.bookingRow}><span style={ss.bookingLabel}>Date</span><span style={ss.bookingValue}>{fmtDate(booking.start)}</span></div>}
         {booking.start && booking.end && <div style={ss.bookingRow}><span style={ss.bookingLabel}>Time</span><span style={ss.bookingValue}>{fmtTime(booking.start, booking.end)}</span></div>}
         {booking.description && <div style={ss.bookingDetail}>{booking.description}</div>}
+        {booking.meet_url && (
+          <div style={{ marginTop: 10, textAlign: "center" }}>
+            <a href={booking.meet_url} target="_blank" style={{ fontSize: 13, color: PRIMARY_COLOR, textDecoration: "none", fontWeight: 600, padding: "8px 16px", background: PRIMARY_COLOR + "12", borderRadius: 8, display: "inline-block" }}>
+              Join Google Meet →
+            </a>
+          </div>
+        )}
       </div>
     </motion.div>
   );
