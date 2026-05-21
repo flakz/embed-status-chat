@@ -37,7 +37,16 @@ export default function BookingCard({ booking }: { booking: Booking }) {
             {booking.status}
           </span>
         </div>
-        {booking.attendees && <div style={ss.bookingRow}><span style={ss.bookingLabel}>Attendees</span><span style={ss.bookingValue}>{booking.attendees}</span></div>}
+        {booking.attendees && (
+          <div style={ss.bookingRow}>
+            <span style={ss.bookingLabel}>Attendees</span>
+            <span style={ss.bookingValue}>
+              {booking.attendees.split(",").map((email, i) => (
+                <span key={i} style={{ display: "block" }}>{email.trim()}</span>
+              ))}
+            </span>
+          </div>
+        )}
         {booking.start && <div style={ss.bookingRow}><span style={ss.bookingLabel}>Date</span><span style={ss.bookingValue}>{fmtDate(booking.start)}</span></div>}
         {booking.start && booking.end && <div style={ss.bookingRow}><span style={ss.bookingLabel}>Time</span><span style={ss.bookingValue}>{fmtTime(booking.start, booking.end)}</span></div>}
         {booking.description && <div style={ss.bookingDetail}>{booking.description}</div>}
