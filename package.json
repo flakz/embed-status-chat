@@ -1,6 +1,8 @@
 {
   "name": "marno-chat-widget",
   "version": "1.0.0",
+  "description": "Embeddable AI chat widget with structured output cards (products, bookings, tasks, events, orders)",
+  "license": "UNLICENSED",
   "private": true,
   "type": "module",
   "scripts": {

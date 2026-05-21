@@ -1,15 +1,11 @@
-import React from "react";
 import { motion } from "motion/react";
 import { ss, PRIMARY_COLOR } from "../styles";
+import { formatPrice } from "../format";
 import type { ProductItem } from "../types";
 
-function formatPrice(price: string | number): string {
-  const n = typeof price === "string" ? parseFloat(price) : price;
-  if (isNaN(n)) return String(price);
-  return `₹${n.toLocaleString("en-IN")}`;
-}
-
 export default function ProductsCard({ products }: { products: ProductItem[] }) {
+  const storeUrl = window.MarnoChatConfig?.storeUrl;
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 8 }}
@@ -24,8 +20,8 @@ export default function ProductsCard({ products }: { products: ProductItem[] }) 
             <div style={ss.productName}>{item.title}</div>
             {item.price && <div style={ss.productPrice}>{formatPrice(item.price)}</div>}
             {item.description && <div style={ss.productDesc}>{item.description}</div>}
-            {item.handle && (
-              <a href={`https://anarcx.in/products/${item.handle}`} target="_blank" style={{ fontSize: 12, color: PRIMARY_COLOR, textDecoration: "none", fontWeight: 500 }}>
+            {item.handle && storeUrl && (
+              <a href={`${storeUrl}/products/${item.handle}`} target="_blank" rel="noopener noreferrer" style={{ fontSize: 12, color: PRIMARY_COLOR, textDecoration: "none", fontWeight: 500 }}>
                 View product →
               </a>
             )}

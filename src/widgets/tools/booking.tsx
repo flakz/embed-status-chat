@@ -1,25 +1,7 @@
-import React from "react";
 import { motion } from "motion/react";
 import { ss, PRIMARY_COLOR } from "../styles";
+import { fmtDate, fmtTime } from "../format";
 import type { Booking } from "../types";
-
-function fmtDate(dateStr: string) {
-  try {
-    const d = new Date(dateStr);
-    if (!isNaN(d.getTime())) return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
-  } catch {}
-  return dateStr;
-}
-
-function fmtTime(start: string, end: string) {
-  try {
-    const s = new Date(start);
-    const e = new Date(end);
-    if (!isNaN(s.getTime()) && !isNaN(e.getTime()))
-      return `${s.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true })} - ${e.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true })}`;
-  } catch {}
-  return "";
-}
 
 export default function BookingCard({ booking }: { booking: Booking }) {
   return (
@@ -51,7 +33,7 @@ export default function BookingCard({ booking }: { booking: Booking }) {
         {booking.start && booking.end && <div style={ss.bookingRow}><span style={ss.bookingLabel}>Time</span><span style={ss.bookingValue}>{fmtTime(booking.start, booking.end)}</span></div>}
         {booking.description && <div style={ss.bookingDetail}>{booking.description}</div>}
         {booking.meet_url && (
-          <a href={booking.meet_url} target="_blank" style={{ fontSize: 13, color: PRIMARY_COLOR, textDecoration: "none", fontWeight: 600, padding: "8px 0", background: PRIMARY_COLOR + "12", borderRadius: 8, display: "block", width: "100%", textAlign: "center", marginTop: 10 }}>
+          <a href={booking.meet_url} target="_blank" rel="noopener noreferrer" style={{ fontSize: 13, color: PRIMARY_COLOR, textDecoration: "none", fontWeight: 600, padding: "8px 0", background: PRIMARY_COLOR + "12", borderRadius: 8, display: "block", width: "100%", textAlign: "center", marginTop: 10 }}>
             Join Google Meet →
           </a>
         )}

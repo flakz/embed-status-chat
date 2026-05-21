@@ -1,64 +1,72 @@
-import React, { useState, useRef, useEffect, type KeyboardEvent } from "react";
+import React, { useState, useRef, useEffect, useCallback, type KeyboardEvent } from "react";
 import { createRoot } from "react-dom/client";
 import { RotateCw, X, ArrowUp, Loader2, Check, Square } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import ReactMarkdown from "react-markdown";
 import remarkBreaks from "remark-breaks";
-import type { Message, GenUIData } from "./widgets/types";
+import type { Message, GenUIData, AgentStep } from "./widgets/types";
 import { toolIcon, toolLabel, toolDoneLabel } from "./widgets/tool-labels";
 import { parseStructuredResponse, getResponseText } from "./widgets/parse-response";
-import { ss, PRIMARY_COLOR } from "./widgets/styles";
+import { ss, getPrimaryColor } from "./widgets/styles";
 import { ProductsCard, BookingCard, TaskCard, OrdersCard, EventsCard } from "./widgets/tools";
+import ErrorBoundary from "./widgets/error-boundary";
 
-declare global {
-  interface Window {
-    MarnoChatConfig?: {
-      webhookUrl?: string;
-      kbSlug?: string;
-      brandName?: string;
-      brandLogo?: string;
-      primaryColor?: string;
-      toggleIcon?: string;
-      fontFamily?: string;
-      suggestions?: { label: string; prompt: string }[];
-      greetings?: [string, string];
-    };
+function getConfig() {
+  const c = window.MarnoChatConfig;
+  return {
+    brandName: c?.brandName || "Marno AI",
+    brandLogo: c?.brandLogo || "",
+    toggleIcon: c?.toggleIcon || "https://heroui-assets.nyc3.cdn.digitaloceanspaces.com/avatars/green.jpg",
+    fontFamily: c?.fontFamily || "Karla",
+    webhookUrl: c?.webhookUrl || "https://n8n.marno.pro/webhook/marno-chat",
+    kbSlug: c?.kbSlug || "kbase",
+    suggestions: c?.suggestions || [
+      { label: "Get started", prompt: "How do I get started with the platform?" },
+      { label: "See templates", prompt: "Can you show me the available templates?" },
+      { label: "Pricing", prompt: "What are the pricing plans available?" },
+      { label: "Book a demo", prompt: "I would like to book a demo." },
+      { label: "Documentation", prompt: "Where can I find the API documentation?" },
+    ],
+    greeting1: c?.greetings?.[0] || "Hi there! I'm an AI agent trained on docs, help articles, and other important content.",
+    greeting2: c?.greetings?.[1] || "How can I best help you today?",
+    animationSpeed: c?.animationSpeed || "normal",
+  };
+}
+
+const HIDDEN_TOOL_PATTERNS = ["format", "parser", "json_response"];
+const ANIMATION_DELAYS: Record<string, [number, number]> = { fast: [150, 100], normal: [600, 300], off: [0, 0] };
+
+function isVisibleToolStep(step: AgentStep): boolean {
+  if (!step.toolCalls || step.toolCalls.length === 0) return false;
+  const name = step.toolCalls[0]?.toolName?.toLowerCase() || "";
+  return !HIDDEN_TOOL_PATTERNS.some((p) => name.includes(p));
+}
+
+async function animateTyping(text: string, messageId: string, setMessages: (v: Message[] | ((prev: Message[]) => Message[])) => void, abortSignal: AbortSignal) {
+  const chars = text.split("");
+  let fullText = "";
+  for (let i = 0; i < chars.length; i += 2) {
+    if (abortSignal.aborted) break;
+    fullText += chars[i] + (chars[i + 1] || "");
+    setMessages((prev) => prev.map((m) => (m.id === messageId ? { ...m, text: fullText } : m)));
+    await new Promise((r) => setTimeout(r, 10));
   }
 }
 
-const BRAND_NAME = window.MarnoChatConfig?.brandName || "Marno AI";
-const BRAND_LOGO = window.MarnoChatConfig?.brandLogo || "";
-const TOGGLE_ICON = window.MarnoChatConfig?.toggleIcon || "https://heroui-assets.nyc3.cdn.digitaloceanspaces.com/avatars/green.jpg";
-const FONT_FAMILY = window.MarnoChatConfig?.fontFamily || "Karla";
-
-const WEBHOOK_URL = window.MarnoChatConfig?.webhookUrl || "https://n8n.marno.pro/webhook/marno-chat";
-const KB_SLUG = window.MarnoChatConfig?.kbSlug || "kbase";
-
-const SUGGESTIONS = window.MarnoChatConfig?.suggestions || [
-  { label: "Get started", prompt: "How do I get started with the platform?" },
-  { label: "See templates", prompt: "Can you show me the available templates?" },
-  { label: "Pricing", prompt: "What are the pricing plans available?" },
-  { label: "Book a demo", prompt: "I would like to book a demo." },
-  { label: "Documentation", prompt: "Where can I find the API documentation?" },
-];
-
-const GREETING_1 = window.MarnoChatConfig?.greetings?.[0] || "Hi there! I'm an AI agent trained on docs, help articles, and other important content.";
-const GREETING_2 = window.MarnoChatConfig?.greetings?.[1] || "How can I best help you today?";
-
-const mdStyles = `
-@keyframes marno-spin { to { transform: rotate(360deg); } }
-@keyframes marno-pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.5; } }
-.marno-md p { margin: 0; }
-.marno-md p:not(:last-child) { margin-bottom: 12px; }
-.marno-md ul, .marno-md ol { margin: 8px 0; padding-left: 20px; }
-.marno-md ul { list-style: disc; }
-.marno-md ol { list-style: decimal; }
-.marno-md strong { font-weight: 600; }
-.marno-tool-spinner {
-  animation: marno-spin 1s linear infinite;
-  width: 14px; height: 14px; flex-shrink: 0;
+async function animateToolSteps(steps: AgentStep[], speed: string, setMessages: (v: Message[] | ((prev: Message[]) => Message[])) => void) {
+  const toolSteps = steps.filter(isVisibleToolStep);
+  const [toolDelay, extraDelay] = ANIMATION_DELAYS[speed] || ANIMATION_DELAYS.normal;
+  for (const step of toolSteps) {
+    for (const tc of (step.toolCalls || [])) {
+      const toolName = tc.toolName || "unknown";
+      const toolId = crypto.randomUUID();
+      setMessages((prev) => [...prev, { id: toolId, role: "tool", text: toolLabel(toolName), toolName, toolDone: false }]);
+      await new Promise((r) => setTimeout(r, toolDelay));
+      setMessages((prev) => prev.map((m) => (m.id === toolId ? { ...m, text: toolDoneLabel(toolName), toolDone: true } : m)));
+    }
+  }
+  if (toolSteps.length > 0) await new Promise((r) => setTimeout(r, extraDelay));
 }
-`;
 
 function GenUIBlock({ genUI }: { genUI: GenUIData }) {
   return (
@@ -73,45 +81,28 @@ function GenUIBlock({ genUI }: { genUI: GenUIData }) {
 }
 
 function ChatWidget() {
-  const [messages, setMessages] = useState<Message[]>([
-    { id: crypto.randomUUID(), role: "system", text: GREETING_1 },
-    { id: crypto.randomUUID(), role: "system", text: GREETING_2 },
+  const config = getConfig();
+  const [messages, setMessages] = useState<Message[]>(() => [
+    { id: crypto.randomUUID(), role: "system", text: config.greeting1 },
+    { id: crypto.randomUUID(), role: "system", text: config.greeting2 },
   ]);
   const [inputValue, setInputValue] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
-  const [toggleHover, setToggleHover] = useState(false);
-  const [toggleActive, setToggleActive] = useState(false);
   const [inputFocused, setInputFocused] = useState(false);
   const sessionIdRef = useRef<string>(crypto.randomUUID());
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const abortRef = useRef<AbortController | null>(null);
+  const typingAbortRef = useRef(new AbortController());
 
-  useEffect(() => { sessionIdRef.current = crypto.randomUUID(); }, []);
-
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
-
-  const handleSendRef = useRef(handleSend);
-  handleSendRef.current = handleSend;
-
-  useEffect(() => {
-    (window as any).marno = {
-      open: () => setIsOpen(true),
-      close: () => setIsOpen(false),
-      toggle: () => setIsOpen((prev) => !prev),
-      send: (text: string) => handleSendRef.current(text),
-    };
-    return () => { delete (window as any).marno; };
+  const handleStop = useCallback(() => {
+    abortRef.current?.abort();
+    typingAbortRef.current.abort();
+    typingAbortRef.current = new AbortController();
+    setIsLoading(false);
   }, []);
 
-  const handleStop = () => {
-    abortRef.current?.abort();
-    setIsLoading(false);
-  };
-
-  const handleSend = async (textOverride?: string) => {
+  const handleSend = useCallback(async (textOverride?: string) => {
     const textToSend = textOverride || inputValue;
     const trimmed = textToSend.trim();
     if (!trimmed) return;
@@ -125,21 +116,19 @@ function ChatWidget() {
 
     setIsLoading(true);
 
-    const sessionId = sessionIdRef.current;
-
     try {
-      const res = await fetch(WEBHOOK_URL, {
+      const res = await fetch(config.webhookUrl, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ query: trimmed, sessionId, slug: KB_SLUG }),
+        body: JSON.stringify({ query: trimmed, sessionId: sessionIdRef.current, slug: config.kbSlug }),
         signal: controller.signal,
       });
 
       if (!res.ok) throw new Error(`Webhook returned ${res.status}`);
 
+      const finalId = crypto.randomUUID();
       const contentType = res.headers.get("content-type") || "";
 
-      // Streaming response
       if (!contentType.includes("application/json") && !contentType.includes("text/html")) {
         const reader = res.body?.getReader();
         if (reader) {
@@ -157,21 +146,21 @@ function ChatWidget() {
             for (const line of lines) {
               const trimmedLine = line.trim();
               if (!trimmedLine) continue;
-              let event: any;
-              try { event = JSON.parse(trimmedLine); } catch {
+              try {
+                const event = JSON.parse(trimmedLine);
+                if (event.version === 1 && event.toolCalls) {
+                  for (const tc of event.toolCalls) {
+                    const toolId = tc.toolCallId || crypto.randomUUID();
+                    setMessages((prev) => [...prev, { id: toolId, role: "tool", text: toolLabel(tc.toolName), toolName: tc.toolName, toolDone: false }]);
+                  }
+                } else if (event.version === 1 && event.toolResults) {
+                  for (const tr of event.toolResults) {
+                    setMessages((prev) => prev.map((m) => (m.role === "tool" && m.toolName === tr.toolName && !m.toolDone ? { ...m, text: toolDoneLabel(tr.toolName), toolDone: true } : m)));
+                  }
+                }
+              } catch {
                 if (!answerStarted) { streamingAnswerId = crypto.randomUUID(); setMessages((prev) => [...prev, { id: streamingAnswerId, role: "model", text: "" }]); answerStarted = true; }
                 setMessages((prev) => prev.map((m) => (m.id === streamingAnswerId ? { ...m, text: m.text + trimmedLine } : m)));
-                continue;
-              }
-              if (event.version === 1 && event.toolCalls) {
-                for (const tc of event.toolCalls) {
-                  const toolId = tc.toolCallId || crypto.randomUUID();
-                  setMessages((prev) => [...prev, { id: toolId, role: "tool", text: toolLabel(tc.toolName), toolName: tc.toolName, toolDone: false }]);
-                }
-              } else if (event.version === 1 && event.toolResults) {
-                for (const tr of event.toolResults) {
-                  setMessages((prev) => prev.map((m) => (m.role === "tool" && m.toolName === tr.toolName && !m.toolDone ? { ...m, text: toolDoneLabel(tr.toolName), toolDone: true } : m)));
-                }
               }
             }
           }
@@ -180,78 +169,81 @@ function ChatWidget() {
         }
       }
 
-      // JSON response (structured output)
       const resp = await res.json();
       const genUI = parseStructuredResponse(resp);
       const responseText = getResponseText(genUI, resp);
 
-      const steps = resp.steps || resp.intermediateSteps || [];
-      if (steps.length > 0) {
-        const toolSteps = steps.filter((s: any) => {
-          if (!s.toolCalls || s.toolCalls.length === 0) return false;
-          const name = s.toolCalls[0]?.toolName?.toLowerCase() || "";
-          return !name.includes("format") && !name.includes("parser") && !name.includes("json_response");
-        });
-        for (const step of toolSteps) {
-          for (const tc of (step.toolCalls || [])) {
-            const toolName = tc.toolName || tc.tool_name || "unknown";
-            const toolId = crypto.randomUUID();
-            setMessages((prev) => [...prev, { id: toolId, role: "tool", text: toolLabel(toolName), toolName, toolDone: false }]);
-            await new Promise((r) => setTimeout(r, 600));
-            setMessages((prev) => prev.map((m) => (m.id === toolId ? { ...m, text: toolDoneLabel(toolName), toolDone: true } : m)));
-          }
-        }
-        await new Promise((r) => setTimeout(r, 300));
-      }
+      const steps: AgentStep[] = resp.steps || resp.intermediateSteps || [];
+      await animateToolSteps(steps, config.animationSpeed, setMessages);
 
       setIsLoading(false);
 
       if (responseText || genUI) {
-        const finalId = crypto.randomUUID();
         setMessages((prev) => [...prev, { id: finalId, role: "model", text: "" }]);
-        const chars = responseText.split("");
-        let fullText = "";
-        for (let i = 0; i < chars.length; i += 2) {
-          fullText += chars[i] + (chars[i + 1] || "");
-          setMessages((prev) => prev.map((m) => (m.id === finalId ? { ...m, text: fullText } : m)));
-          await new Promise((r) => setTimeout(r, 10));
-        }
-        // attach genUI after typing animation
+        await animateTyping(responseText, finalId, setMessages, typingAbortRef.current.signal);
         setMessages((prev) => prev.map((m) => (m.id === finalId ? { ...m, genUI } : m)));
       } else {
         setMessages((prev) => [...prev, { id: crypto.randomUUID(), role: "model", text: "I'm sorry, I didn't get a response. Please try again." }]);
       }
-    } catch (error: any) {
-      if (error.name === "AbortError") return;
+    } catch (error: unknown) {
+      if (error instanceof Error && error.name === "AbortError") return;
       console.error("Failed to send message:", error);
       setMessages((prev) => [
         ...prev,
         { id: crypto.randomUUID(), role: "model", text: "I'm sorry, I encountered an error. Please check your connection or try again later." },
       ]);
     } finally {
+      abortRef.current = null;
       setIsLoading(false);
     }
-  };
+  }, [inputValue, config]);
 
-  const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => { if (e.key === "Enter") handleSend(); };
+  const handleKeyDown = useCallback((e: KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") { e.preventDefault(); handleSend(); }
+  }, [handleSend]);
 
-  const handleReset = () => {
+  const handleReset = useCallback(() => {
     abortRef.current?.abort();
+    typingAbortRef.current.abort();
+    typingAbortRef.current = new AbortController();
     setMessages([
-      { id: crypto.randomUUID(), role: "system", text: GREETING_1 },
-      { id: crypto.randomUUID(), role: "system", text: GREETING_2 },
+      { id: crypto.randomUUID(), role: "system", text: config.greeting1 },
+      { id: crypto.randomUUID(), role: "system", text: config.greeting2 },
     ]);
     setInputValue("");
     setIsLoading(false);
     sessionIdRef.current = crypto.randomUUID();
-  };
+  }, [config]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const handler = (e: globalThis.KeyboardEvent) => { if (e.key === "Escape") setIsOpen(false); };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [isOpen]);
+
+  useEffect(() => {
+    const scrollBehavior: ScrollBehavior = isLoading ? "instant" : "smooth";
+    messagesEndRef.current?.scrollIntoView({ behavior: scrollBehavior });
+  }, [messages, isLoading]);
+
+  const handleSendRef = useRef(handleSend);
+  handleSendRef.current = handleSend;
+
+  useEffect(() => {
+    window.marno = {
+      open: () => setIsOpen(true),
+      close: () => setIsOpen(false),
+      toggle: () => setIsOpen((prev) => !prev),
+      send: (text: string) => handleSendRef.current(text),
+    };
+    return () => { delete window.marno; };
+  }, []);
 
   const isInputEmpty = inputValue.trim().length === 0;
 
   return (
     <>
-      <style>{mdStyles}</style>
-
       <AnimatePresence>
         {isOpen && (
           <motion.div
@@ -260,28 +252,28 @@ function ChatWidget() {
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
           >
-            <div style={ss.panel as React.CSSProperties}>
+            <div style={ss.panel} role="dialog" aria-label={`Chat with ${config.brandName}`}>
               <div style={ss.header}>
                 <div style={ss.headerLeft}>
                   <div style={ss.logoCircle}>
-                    {BRAND_LOGO ? (
-                      <img src={BRAND_LOGO} alt={BRAND_NAME} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                    {config.brandLogo ? (
+                      <img src={config.brandLogo} alt={config.brandName} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                     ) : (
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" style={{ transform: "translateY(1px)" }}>
                         <path d="M4 17V10A4 4 0 0 1 12 10V17M12 17V10A4 4 0 0 1 20 10V17" />
                       </svg>
                     )}
                   </div>
-                  <span style={ss.headerTitle}>{BRAND_NAME}</span>
+                  <span style={ss.headerTitle}>{config.brandName}</span>
                 </div>
                 <div style={ss.headerActions}>
-                  <button onClick={handleReset} style={ss.headerBtn} title="Reset chat"><RotateCw size={18} strokeWidth={2.5} /></button>
-                  <button onClick={() => setIsOpen(false)} style={ss.headerBtn}><X size={20} strokeWidth={2.5} /></button>
+                  <button onClick={handleReset} style={ss.headerBtn} title="Reset chat" aria-label="Reset chat"><RotateCw size={18} strokeWidth={2.5} /></button>
+                  <button onClick={() => setIsOpen(false)} style={ss.headerBtn} aria-label="Close chat"><X size={20} strokeWidth={2.5} /></button>
                 </div>
               </div>
 
-              <div style={ss.msgArea as React.CSSProperties}>
-                <div style={ss.msgList}>
+              <div style={ss.msgArea}>
+                <div style={ss.msgList} role="log" aria-live="polite">
                   <AnimatePresence mode="popLayout" initial={true}>
                     {messages.map((msg, index) => {
                       const prevMsg = index > 0 ? messages[index - 1] : null;
@@ -307,7 +299,7 @@ function ChatWidget() {
                                 {msg.toolDone ? (
                                   <Check size={14} style={{ color: "#059669", flexShrink: 0 }} />
                                 ) : (
-                                  <Loader2 size={14} className="marno-tool-spinner" style={{ color: PRIMARY_COLOR }} />
+                                  <Loader2 size={14} className="marno-tool-spinner" style={{ color: getPrimaryColor() }} />
                                 )}
                                 <span>{msg.toolDone ? msg.text : `${toolIcon(msg.toolName || "")} ${msg.text}`}</span>
                               </div>
@@ -356,7 +348,7 @@ function ChatWidget() {
                     {!isLoading && messages.length === 2 && messages[0].role === "system" && (
                       <motion.div layout key="suggestions" initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10, filter: "blur(4px)", transition: { duration: 0.15 } }} transition={{ duration: 0.3, delay: 0.1, ease: "easeOut" }}>
                         <div style={ss.suggestions}>
-                          {SUGGESTIONS.map((s) => (
+                          {config.suggestions.map((s) => (
                             <motion.button layoutId={`suggestion-${s.prompt}`} key={s.prompt} onClick={() => handleSend(s.prompt)} style={ss.suggestBtn}>{s.label}</motion.button>
                           ))}
                         </div>
@@ -368,11 +360,23 @@ function ChatWidget() {
               </div>
 
               <div style={ss.inputWrap}>
-                <div style={{ ...ss.inputBar, borderColor: inputFocused ? PRIMARY_COLOR + "99" : "#e5e7eb", boxShadow: "0 4px 12px rgba(0,0,0,0.15)" }}>
-                  <input type="text" value={inputValue} onChange={(e) => setInputValue(e.target.value)} onKeyDown={handleKeyDown} onFocus={() => setInputFocused(true)} onBlur={() => setInputFocused(false)} placeholder="Message..." disabled={isLoading} style={ss.input} />
+                <div style={{ ...ss.inputBar, borderColor: inputFocused ? getPrimaryColor() + "99" : "#e5e7eb", boxShadow: "0 4px 12px rgba(0,0,0,0.15)" }}>
+                  <input
+                    type="text"
+                    value={inputValue}
+                    onChange={(e) => setInputValue(e.target.value)}
+                    onKeyDown={handleKeyDown}
+                    onFocus={() => setInputFocused(true)}
+                    onBlur={() => setInputFocused(false)}
+                    placeholder="Message..."
+                    disabled={isLoading}
+                    style={ss.input}
+                    aria-label="Type a message"
+                  />
                   <button
                     onClick={() => isLoading ? handleStop() : handleSend()}
                     style={ss.sendBtn(isLoading || (!isInputEmpty && !isLoading))}
+                    aria-label={isLoading ? "Stop generating" : "Send message"}
                   >
                     {isLoading ? <Square size={12} fill="currentColor" /> : <ArrowUp size={18} strokeWidth={2.5} />}
                   </button>
@@ -385,36 +389,53 @@ function ChatWidget() {
 
       <button
         onClick={() => setIsOpen(!isOpen)}
-        onMouseEnter={() => setToggleHover(true)}
-        onMouseLeave={() => { setToggleHover(false); setToggleActive(false); }}
-        onMouseDown={() => setToggleActive(true)}
-        onMouseUp={() => setToggleActive(false)}
-        style={{
-          ...ss.toggle,
-          transform: toggleActive ? "scale(0.95)" : toggleHover ? "scale(1.1) rotate(12deg)" : "scale(1)",
-          boxShadow: toggleHover ? "0 6px 20px rgba(0,0,0,0.35)" : "0 4px 12px rgba(0,0,0,0.25)",
-        }}
+        style={ss.toggle}
+        aria-label={isOpen ? "Close chat" : "Open chat"}
+        aria-expanded={isOpen}
       >
-        <img src={TOGGLE_ICON} alt="Chat" style={ss.toggleImg} />
+        <img src={config.toggleIcon} alt="Chat" style={ss.toggleImg} />
       </button>
     </>
   );
 }
 
 function mount() {
+  const config = getConfig();
+
   const fontLink = document.createElement("link");
   fontLink.rel = "stylesheet";
-  fontLink.href = `https://fonts.googleapis.com/css2?family=${FONT_FAMILY.replace(/ /g, "+")}:wght@400;500;600;700&display=swap`;
+  fontLink.href = `https://fonts.googleapis.com/css2?family=${config.fontFamily.replace(/ /g, "+")}:wght@400;500;600;700&display=swap`;
   document.head.appendChild(fontLink);
 
   const fontOverride = document.createElement("style");
-  fontOverride.textContent = `#marno-widget-root, #marno-widget-root * { font-family: "${FONT_FAMILY}", ui-sans-serif, system-ui, sans-serif !important; }`;
+  fontOverride.textContent = `#marno-widget-root, #marno-widget-root * { font-family: "${config.fontFamily}", ui-sans-serif, system-ui, sans-serif !important; }`;
   document.head.appendChild(fontOverride);
+
+  const animStyles = document.createElement("style");
+  animStyles.textContent = `
+@keyframes marno-spin { to { transform: rotate(360deg); } }
+@keyframes marno-pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.5; } }
+.marno-md p { margin: 0; }
+.marno-md p:not(:last-child) { margin-bottom: 12px; }
+.marno-md ul, .marno-md ol { margin: 8px 0; padding-left: 20px; }
+.marno-md ul { list-style: disc; }
+.marno-md ol { list-style: decimal; }
+.marno-md strong { font-weight: 600; }
+.marno-tool-spinner {
+  animation: marno-spin 1s linear infinite;
+  width: 14px; height: 14px; flex-shrink: 0;
+}
+`;
+  document.head.appendChild(animStyles);
 
   const root = document.createElement("div");
   root.id = "marno-widget-root";
   document.body.appendChild(root);
-  createRoot(root).render(React.createElement(ChatWidget));
+  createRoot(root).render(
+    <ErrorBoundary>
+      <ChatWidget />
+    </ErrorBoundary>
+  );
 }
 
 if (document.readyState === "loading") {
