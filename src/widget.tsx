@@ -112,16 +112,18 @@ function formatPrice(price: string | number): string {
 
 function parseStructuredResponse(resp: any): GenUIData | undefined {
   if (!resp) return undefined;
+  // Unwrap: the AI outputs { output: { message, products, ... } }
+  const inner = resp.output || resp;
   const gen: GenUIData = {};
 
-  if (typeof resp.message === "string") gen.message = resp.message;
-  if (Array.isArray(resp.products)) gen.products = resp.products;
-  if (resp.booking && typeof resp.booking === "object") gen.booking = resp.booking;
-  if (Array.isArray(resp.events)) gen.events = resp.events;
-  if (resp.task && typeof resp.task === "object") gen.task = resp.task;
-  if (Array.isArray(resp.orders)) gen.orders = resp.orders;
+  if (typeof inner.message === "string") gen.message = inner.message;
+  if (Array.isArray(inner.products)) gen.products = inner.products;
+  if (inner.booking && typeof inner.booking === "object") gen.booking = inner.booking;
+  if (Array.isArray(inner.events)) gen.events = inner.events;
+  if (inner.task && typeof inner.task === "object") gen.task = inner.task;
+  if (Array.isArray(inner.orders)) gen.orders = inner.orders;
 
-  if (gen.products || gen.booking || gen.events || gen.task || gen.orders) return gen;
+  if (gen.products || gen.booking || gen.events || gen.task || gen.orders || gen.message) return gen;
   return undefined;
 }
 
@@ -386,7 +388,10 @@ function ChatWidget() {
       // JSON response (structured output)
       const resp = await res.json();
       const genUI = parseStructuredResponse(resp);
-      let responseText = genUI?.message || resp.output || resp.response || "";
+      let responseText: string = genUI?.message || "";
+      if (!responseText && typeof resp.output === "string") responseText = resp.output;
+      if (!responseText && typeof resp.response === "string") responseText = resp.response;
+      if (!responseText && typeof resp.text === "string") responseText = resp.text;
 
       // Animate tool steps for visual feedback
       const steps = resp.steps || resp.intermediateSteps || [];
