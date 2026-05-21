@@ -350,7 +350,7 @@ function ChatWidget() {
               </div>
 
               <div style={ss.inputWrap}>
-                <div style={{ ...ss.inputBar, borderColor: inputFocused ? PRIMARY_COLOR : "#e5e7eb", boxShadow: inputFocused ? `0 0 0 3px ${PRIMARY_COLOR}20` : "none" }}>
+                <div style={{ ...ss.inputBar, borderColor: inputFocused ? PRIMARY_COLOR : "#e5e7eb", boxShadow: inputFocused ? "0 4px 12px rgba(0,0,0,0.15)" : "none" }}>
                   <input type="text" value={inputValue} onChange={(e) => setInputValue(e.target.value)} onKeyDown={handleKeyDown} onFocus={() => setInputFocused(true)} onBlur={() => setInputFocused(false)} placeholder="Message..." disabled={isLoading} style={ss.input} />
                   <button onClick={() => handleSend()} disabled={isInputEmpty || isLoading} style={ss.sendBtn(!isInputEmpty && !isLoading)}><ArrowUp size={18} strokeWidth={2.5} /></button>
                 </div>
