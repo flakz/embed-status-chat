@@ -168,7 +168,11 @@ function ChatWidget() {
 
       const steps = resp.steps || resp.intermediateSteps || [];
       if (steps.length > 0) {
-        const toolSteps = steps.filter((s: any) => s.toolCalls && s.toolCalls.length > 0);
+        const toolSteps = steps.filter((s: any) => {
+          if (!s.toolCalls || s.toolCalls.length === 0) return false;
+          const name = s.toolCalls[0]?.toolName?.toLowerCase() || "";
+          return !name.includes("format") && !name.includes("parser") && !name.includes("json_response");
+        });
         for (const step of toolSteps) {
           for (const tc of (step.toolCalls || [])) {
             const toolName = tc.toolName || tc.tool_name || "unknown";
