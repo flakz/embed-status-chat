@@ -189,7 +189,16 @@ function ChatWidget() {
 
       if (responseText || genUI) {
         const finalId = crypto.randomUUID();
-        setMessages((prev) => [...prev, { id: finalId, role: "model", text: responseText, genUI }]);
+        setMessages((prev) => [...prev, { id: finalId, role: "model", text: "" }]);
+        const chars = responseText.split("");
+        let fullText = "";
+        for (let i = 0; i < chars.length; i += 2) {
+          fullText += chars[i] + (chars[i + 1] || "");
+          setMessages((prev) => prev.map((m) => (m.id === finalId ? { ...m, text: fullText } : m)));
+          await new Promise((r) => setTimeout(r, 10));
+        }
+        // attach genUI after typing animation
+        setMessages((prev) => prev.map((m) => (m.id === finalId ? { ...m, genUI } : m)));
       } else {
         setMessages((prev) => [...prev, { id: crypto.randomUUID(), role: "model", text: "I'm sorry, I didn't get a response. Please try again." }]);
       }
