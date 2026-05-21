@@ -112,8 +112,17 @@ function formatPrice(price: string | number): string {
 
 function parseStructuredResponse(resp: any): GenUIData | undefined {
   if (!resp) return undefined;
-  // Unwrap: the AI outputs { output: { message, products, ... } }
-  const inner = resp.output || resp;
+  // Unwrap nested { output: { output: { ... } } }
+  let inner = resp;
+  while (inner && typeof inner === "object" && !Array.isArray(inner)) {
+    if (inner.message || inner.products || inner.booking || inner.events || inner.task || inner.orders) break;
+    if (inner.output && typeof inner.output === "object" && !Array.isArray(inner.output)) {
+      inner = inner.output;
+    } else {
+      break;
+    }
+  }
+
   const gen: GenUIData = {};
 
   if (typeof inner.message === "string") gen.message = inner.message;
