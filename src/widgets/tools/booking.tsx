@@ -42,8 +42,8 @@ export default function BookingCard({ booking }: { booking: Booking }) {
         {booking.start && booking.end && <div style={ss.bookingRow}><span style={ss.bookingLabel}>Time</span><span style={ss.bookingValue}>{fmtTime(booking.start, booking.end)}</span></div>}
         {booking.description && <div style={ss.bookingDetail}>{booking.description}</div>}
         {booking.meet_url && (
-          <a href={booking.meet_url} target="_blank" style={{ fontSize: 13, color: "#fff", textDecoration: "none", fontWeight: 600, padding: "10px 0", background: PRIMARY_COLOR, borderRadius: 8, display: "block", width: "100%", textAlign: "center", marginTop: 10 }}>
-            Join Google Meet
+          <a href={booking.meet_url} target="_blank" style={{ fontSize: 13, color: PRIMARY_COLOR, textDecoration: "none", fontWeight: 600, padding: "8px 0", background: PRIMARY_COLOR + "12", borderRadius: 8, display: "block", width: "100%", textAlign: "center", marginTop: 10 }}>
+            Join Google Meet →
           </a>
         )}
       </div>
