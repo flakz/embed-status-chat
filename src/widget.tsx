@@ -361,7 +361,7 @@ function ChatWidget() {
                     onClick={() => isLoading ? handleStop() : handleSend()}
                     style={ss.sendBtn(isLoading || (!isInputEmpty && !isLoading))}
                   >
-                    {isLoading ? <Square size={14} /> : <ArrowUp size={18} strokeWidth={2.5} />}
+                    {isLoading ? <Square size={14} fill="currentColor" /> : <ArrowUp size={18} strokeWidth={2.5} />}
                   </button>
                 </div>
               </div>
