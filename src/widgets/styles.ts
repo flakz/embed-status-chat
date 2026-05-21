@@ -80,13 +80,13 @@ export const ss: Record<string, React.CSSProperties | ((...args: any[]) => React
   },
   bookingCard: {
     background: "#fff", borderRadius: 14, border: "1px solid #e5e7eb",
-    padding: 14, maxWidth: 320, boxShadow: "0 1px 3px rgba(0,0,0,0.04)",
+    padding: 14, maxWidth: 340, boxShadow: "0 1px 3px rgba(0,0,0,0.04)",
   },
   bookingHeader: { display: "flex", alignItems: "center", gap: 8, marginBottom: 10 },
   bookingTitle: { fontWeight: 600, fontSize: 15, color: "#1e1e1e" },
-  bookingRow: { display: "flex", justifyContent: "space-between", alignItems: "center", padding: "6px 0", borderBottom: "1px solid #f3f4f6" },
-  bookingLabel: { fontSize: 13, color: "#6b7280" },
-  bookingValue: { fontSize: 13, fontWeight: 500, color: "#1e1e1e" },
+  bookingRow: { display: "flex", justifyContent: "space-between", alignItems: "flex-start", padding: "6px 0", borderBottom: "1px solid #f3f4f6", gap: 8 },
+  bookingLabel: { fontSize: 13, color: "#6b7280", flexShrink: 0 },
+  bookingValue: { fontSize: 13, fontWeight: 500, color: "#1e1e1e", textAlign: "right", wordBreak: "break-word", overflowWrap: "break-word" },
   bookingDetail: {
     marginTop: 10, padding: "8px 10px", background: "#f0fdf4",
     borderRadius: 8, fontSize: 13, color: "#065f46", lineHeight: 1.5,
