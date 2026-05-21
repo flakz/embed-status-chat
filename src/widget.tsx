@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, type KeyboardEvent } from "react";
 import { createRoot } from "react-dom/client";
-import { RotateCw, X, ArrowUp, Loader2, Search, Check } from "lucide-react";
+import { RotateCw, X, ArrowUp, Loader2, Check } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import ReactMarkdown from "react-markdown";
 import remarkBreaks from "remark-breaks";
@@ -55,28 +55,16 @@ const SUGGESTIONS = window.MarnoChatConfig?.suggestions || [
 const GREETING_1 = window.MarnoChatConfig?.greetings?.[0] || "Hi there! I'm an AI agent trained on docs, help articles, and other important content.";
 const GREETING_2 = window.MarnoChatConfig?.greetings?.[1] || "How can I best help you today?";
 
-type ToolGenData = {
-  type?: string;
-  booking?: {
-    status: string;
-    date: string;
-    time: string;
-    name?: string;
-    details?: string;
-  };
-  products?: {
-    items: {
-      image?: string;
-      name: string;
-      price?: string;
-      description?: string;
-      link?: string;
-    }[];
-  };
-  [key: string]: any;
+type GenUIData = {
+  message?: string;
+  products?: { title: string; image: string; price: string; handle: string; description: string }[];
+  booking?: { summary: string; start: string; end: string; attendees?: string; description?: string; status: string };
+  events?: { summary: string; start: string; end: string; status: string }[];
+  task?: { title: string; notes?: string };
+  orders?: { id: string; name: string; total_price: string; created_at: string; status: string }[];
 };
 
-type Message = { id: string; role: "user" | "model" | "system" | "tool"; text: string; toolName?: string; toolDone?: boolean; toolData?: ToolGenData };
+type Message = { id: string; role: "user" | "model" | "system" | "tool"; text: string; toolName?: string; toolDone?: boolean; genUI?: GenUIData };
 
 function toolIcon(name: string) {
   const lower = name.toLowerCase();
@@ -122,88 +110,18 @@ function formatPrice(price: string | number): string {
   return `₹${n.toLocaleString("en-IN")}`;
 }
 
-function stripHtml(html: string): string {
-  return html.replace(/<[^>]*>/g, "").replace(/&amp;/g, "&").replace(/&nbsp;/g, " ").trim();
-}
+function parseStructuredResponse(resp: any): GenUIData | undefined {
+  if (!resp) return undefined;
+  const gen: GenUIData = {};
 
-function extractToolData(toolName: string, toolResults: any[]): ToolGenData | undefined {
-  if (!toolResults?.length) return undefined;
-  for (const tr of toolResults) {
-    try {
-      let result = typeof tr.result === "string" ? JSON.parse(tr.result) : tr.result;
-      if (!result) continue;
+  if (typeof resp.message === "string") gen.message = resp.message;
+  if (Array.isArray(resp.products)) gen.products = resp.products;
+  if (resp.booking && typeof resp.booking === "object") gen.booking = resp.booking;
+  if (Array.isArray(resp.events)) gen.events = resp.events;
+  if (resp.task && typeof resp.task === "object") gen.task = resp.task;
+  if (Array.isArray(resp.orders)) gen.orders = resp.orders;
 
-      const lower = toolName.toLowerCase();
-
-      // Booking — unwrap single array result (Google Calendar returns [event])
-      if (lower.includes("create_event") || lower.includes("book") || lower.includes("appointment")) {
-        if (Array.isArray(result) && result.length > 0) result = result[0];
-        const status = result.status || (result.confirmed ? "Confirmed" : (result.pending ? "Pending" : ""));
-        const summary = result.summary || result.title || result.name || "";
-        const description = result.description || result.details || result.confirmation_message || "";
-        const dateTime = result.start?.dateTime || result.start?.date || result.date || result.appointment_date || "";
-        const endTime = result.end?.dateTime || result.end?.date || "";
-        const timeZone = result.start?.timeZone || result.timezone || "";
-        const name = result.attendees?.[0]?.email || result.customer_name || result.client_name || "";
-
-        if (status || summary || dateTime) {
-          let dateStr = dateTime;
-          let timeStr = "";
-          try {
-            const d = new Date(dateTime);
-            if (!isNaN(d.getTime())) {
-              dateStr = d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
-              timeStr = d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true });
-            }
-          } catch {}
-          if (endTime) {
-            try {
-              const e = new Date(endTime);
-              if (!isNaN(e.getTime())) {
-                timeStr += " - " + e.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true });
-              }
-            } catch {}
-          }
-          return {
-            type: "booking",
-            booking: {
-              status: status || "Scheduled",
-              date: dateStr,
-              time: timeStr,
-              name: name || undefined,
-              details: description || summary || undefined,
-            },
-          };
-        }
-      }
-
-      // Shopify / product search
-      if (lower.includes("product") || lower.includes("shopify") || lower.includes("inventory")) {
-        let items: any[] = [];
-        if (Array.isArray(result)) {
-          items = result;
-        } else if (Array.isArray(result.products)) {
-          items = result.products;
-        } else if (Array.isArray(result.items)) {
-          items = result.items;
-        }
-        if (items.length > 0) {
-          return {
-            type: "products",
-            products: {
-              items: items.slice(0, 6).map((item: any) => ({
-                image: item.image?.src || item.image || item.image_url || item.thumbnail || item.featured_image || "",
-                name: item.title || item.name || item.product_name || "",
-                price: typeof item.variants?.[0]?.price === "string" ? item.variants[0].price : (item.price || item.cost || ""),
-                description: item.body_html || item.description || item.summary || item.vendor || "",
-                link: item.handle ? `https://anarcx.in/products/${item.handle}` : (item.link || item.url || ""),
-              })),
-            },
-          };
-        }
-      }
-    } catch {}
-  }
+  if (gen.products || gen.booking || gen.events || gen.task || gen.orders) return gen;
   return undefined;
 }
 
@@ -455,8 +373,7 @@ function ChatWidget() {
                 }
               } else if (event.version === 1 && event.toolResults) {
                 for (const tr of event.toolResults) {
-                  const genData = extractToolData(tr.toolName, [tr]);
-                  setMessages((prev) => prev.map((m) => (m.role === "tool" && m.toolName === tr.toolName && !m.toolDone ? { ...m, text: toolDoneLabel(tr.toolName), toolDone: true, toolData: genData } : m)));
+                  setMessages((prev) => prev.map((m) => (m.role === "tool" && m.toolName === tr.toolName && !m.toolDone ? { ...m, text: toolDoneLabel(tr.toolName), toolDone: true } : m)));
                 }
               }
             }
@@ -466,52 +383,36 @@ function ChatWidget() {
         }
       }
 
-      // JSON response (non-streaming)
+      // JSON response (structured output)
       const resp = await res.json();
-      let responseText = resp.response || resp.output || "";
+      const genUI = parseStructuredResponse(resp);
+      let responseText = genUI?.message || resp.output || resp.response || "";
 
-      // Animate tool steps from response
+      // Animate tool steps for visual feedback
       const steps = resp.steps || resp.intermediateSteps || [];
       if (steps.length > 0) {
-        // Filter: only steps that actually have tool calls (not the final text step)
         const toolSteps = steps.filter((s: any) => s.toolCalls && s.toolCalls.length > 0);
         for (let i = 0; i < toolSteps.length; i++) {
           const step = toolSteps[i];
           const toolCalls = step.toolCalls || [];
-          const toolResults = step.toolResults || [];
           for (const tc of toolCalls) {
             const toolName = tc.toolName || tc.tool_name || "unknown";
             const toolId = crypto.randomUUID();
-            const genData = extractToolData(toolName, toolResults);
-            setMessages((prev) => [...prev, { id: toolId, role: "tool", text: toolLabel(toolName), toolName, toolDone: false, toolData: genData }]);
+            setMessages((prev) => [...prev, { id: toolId, role: "tool", text: toolLabel(toolName), toolName, toolDone: false }]);
             await new Promise((r) => setTimeout(r, 600));
-            setMessages((prev) => prev.map((m) => (m.id === toolId ? { ...m, text: toolDoneLabel(toolName), toolDone: true, toolData: genData } : m)));
+            setMessages((prev) => prev.map((m) => (m.id === toolId ? { ...m, text: toolDoneLabel(toolName), toolDone: true } : m)));
           }
         }
         await new Promise((r) => setTimeout(r, 300));
-
-        // If responseText is empty, try to get it from the last step
-        if (!responseText) {
-          for (let i = steps.length - 1; i >= 0; i--) {
-            if (steps[i].text) {
-              responseText = steps[i].text;
-              break;
-            }
-          }
-        }
       }
 
       setIsLoading(false);
-      if (responseText) {
+
+      if (responseText || genUI) {
         const finalId = crypto.randomUUID();
-        setMessages((prev) => [...prev, { id: finalId, role: "model", text: "" }]);
-        const chars = responseText.split("");
-        let fullText = "";
-        for (let i = 0; i < chars.length; i += 2) {
-          fullText += chars[i] + (chars[i + 1] || "");
-          setMessages((prev) => prev.map((m) => (m.id === finalId ? { ...m, text: fullText } : m)));
-          await new Promise((r) => setTimeout(r, 10));
-        }
+        setMessages((prev) => [...prev, { id: finalId, role: "model", text: responseText, genUI }]);
+      } else {
+        setMessages((prev) => [...prev, { id: crypto.randomUUID(), role: "model", text: "I'm sorry, I didn't get a response. Please try again." }]);
       }
     } catch (error: any) {
       if (error.name === "AbortError") return;
@@ -582,10 +483,9 @@ function ChatWidget() {
                       const isTool = msg.role === "tool";
                       const isAi = msg.role === "model" || msg.role === "system";
 
-                      // Tool progress cards
+                      // Tool progress cards (visual animation only, no genUI here)
                       if (isTool) {
                         const cardStyle = msg.toolDone ? ss.toolCardDone : ss.toolCard;
-                        const genData = msg.toolData;
                         return (
                           <motion.div
                             layout
@@ -605,49 +505,6 @@ function ChatWidget() {
                                 )}
                                 <span>{msg.toolDone ? msg.text : `${toolIcon(msg.toolName || "")} ${msg.text}`}</span>
                               </div>
-
-                              {/* Generative UI: Booking confirmation */}
-                              {genData?.type === "booking" && genData.booking && msg.toolDone && (
-                                <motion.div
-                                  initial={{ opacity: 0, y: 8 }}
-                                  animate={{ opacity: 1, y: 0 }}
-                                  transition={{ delay: 0.2, duration: 0.3 }}
-                                  style={{ marginTop: 6 }}
-                                >
-                                  <div style={ss.bookingCard}>
-                                    <div style={ss.bookingHeader}>
-                                      <span style={{ fontSize: 18 }}>📅</span>
-                                      <span style={ss.bookingTitle}>Appointment {genData.booking.status}</span>
-                                    </div>
-                                    {genData.booking.name && <div style={ss.bookingRow}><span style={ss.bookingLabel}>Name</span><span style={ss.bookingValue}>{genData.booking.name}</span></div>}
-                                    {genData.booking.date && <div style={ss.bookingRow}><span style={ss.bookingLabel}>Date</span><span style={ss.bookingValue}>{genData.booking.date}</span></div>}
-                                    {genData.booking.time && <div style={ss.bookingRow}><span style={ss.bookingLabel}>Time</span><span style={ss.bookingValue}>{genData.booking.time}</span></div>}
-                                    {genData.booking.details && <div style={ss.bookingDetail}>{genData.booking.details}</div>}
-                                  </div>
-                                </motion.div>
-                              )}
-
-                              {/* Generative UI: Product cards */}
-                              {genData?.type === "products" && genData.products?.items.length > 0 && msg.toolDone && (
-                                <motion.div
-                                  initial={{ opacity: 0, y: 8 }}
-                                  animate={{ opacity: 1, y: 0 }}
-                                  transition={{ delay: 0.2, duration: 0.3 }}
-                                  style={{ marginTop: 6, display: "flex", flexDirection: "column", gap: 6 }}
-                                >
-                                  {genData.products.items.map((item, idx) => (
-                                    <div key={idx} style={ss.productCard}>
-                                      {item.image && <img src={item.image} alt={item.name} style={ss.productImg} />}
-                                      <div style={ss.productInfo}>
-                                        <div style={ss.productName}>{item.name}</div>
-                                        {item.price && <div style={ss.productPrice}>{formatPrice(item.price)}</div>}
-                                        {item.description && <div style={ss.productDesc}>{stripHtml(item.description)}</div>}
-                                        {item.link && <a href={item.link} target="_blank" style={{ fontSize: 12, color: PRIMARY_COLOR, textDecoration: "none", fontWeight: 500 }}>View product →</a>}
-                                      </div>
-                                    </div>
-                                  ))}
-                                </motion.div>
-                              )}
                             </div>
                           </motion.div>
                         );
@@ -656,6 +513,7 @@ function ChatWidget() {
                       // Normal messages
                       const parts = isUser ? [msg.text] : msg.text.split(/(?:\r?\n){2,}/).filter((t) => t.trim().length > 0);
                       if (parts.length === 0 && isAi) parts.push("");
+                      const genUI = isAi ? msg.genUI : undefined;
                       return (
                         <motion.div
                           layout={isUser ? true : "position"}
@@ -678,6 +536,107 @@ function ChatWidget() {
                                 </div>
                               </motion.div>
                             ))}
+
+                            {/* Generative UI: products */}
+                            {genUI?.products && genUI.products.length > 0 && (
+                              <motion.div
+                                initial={{ opacity: 0, y: 8 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: 0.1, duration: 0.3 }}
+                                style={{ marginTop: 8, display: "flex", flexDirection: "column", gap: 6, width: "100%", maxWidth: 360 }}
+                              >
+                                {genUI.products.map((item, idx) => (
+                                  <div key={idx} style={ss.productCard}>
+                                    {item.image && <img src={item.image} alt={item.title} style={ss.productImg} />}
+                                    <div style={ss.productInfo}>
+                                      <div style={ss.productName}>{item.title}</div>
+                                      {item.price && <div style={ss.productPrice}>{formatPrice(item.price)}</div>}
+                                      {item.description && <div style={ss.productDesc}>{item.description}</div>}
+                                      {item.handle && (
+                                        <a href={`https://anarcx.in/products/${item.handle}`} target="_blank" style={{ fontSize: 12, color: PRIMARY_COLOR, textDecoration: "none", fontWeight: 500 }}>
+                                          View product →
+                                        </a>
+                                      )}
+                                    </div>
+                                  </div>
+                                ))}
+                              </motion.div>
+                            )}
+
+                            {/* Generative UI: booking */}
+                            {genUI?.booking && (
+                              <motion.div
+                                initial={{ opacity: 0, y: 8 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: 0.1, duration: 0.3 }}
+                                style={{ marginTop: 8 }}
+                              >
+                                <div style={ss.bookingCard}>
+                                  <div style={ss.bookingHeader}>
+                                    <span style={{ fontSize: 18 }}>📅</span>
+                                    <span style={ss.bookingTitle}>{genUI.booking.summary || "Appointment"}</span>
+                                    <span style={{ fontSize: 12, color: genUI.booking.status === "confirmed" ? "#059669" : "#6b7280", marginLeft: "auto", padding: "2px 8px", background: "#f0fdf4", borderRadius: 6 }}>
+                                      {genUI.booking.status}
+                                    </span>
+                                  </div>
+                                  {genUI.booking.attendees && <div style={ss.bookingRow}><span style={ss.bookingLabel}>Attendee</span><span style={ss.bookingValue}>{genUI.booking.attendees}</span></div>}
+                                  {genUI.booking.start && (
+                                    <div style={ss.bookingRow}>
+                                      <span style={ss.bookingLabel}>Date</span>
+                                      <span style={ss.bookingValue}>
+                                        {(() => { try { const d = new Date(genUI.booking.start); if (!isNaN(d.getTime())) return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }); } catch {} return genUI.booking.start; })()}
+                                      </span>
+                                    </div>
+                                  )}
+                                  {genUI.booking.start && genUI.booking.end && (
+                                    <div style={ss.bookingRow}>
+                                      <span style={ss.bookingLabel}>Time</span>
+                                      <span style={ss.bookingValue}>
+                                        {(() => { try { const s = new Date(genUI.booking.start); const e = new Date(genUI.booking.end); if (!isNaN(s.getTime()) && !isNaN(e.getTime())) return `${s.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true })} - ${e.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true })}`; } catch {} return ""; })()}
+                                      </span>
+                                    </div>
+                                  )}
+                                  {genUI.booking.description && <div style={ss.bookingDetail}>{genUI.booking.description}</div>}
+                                </div>
+                              </motion.div>
+                            )}
+
+                            {/* Generative UI: task */}
+                            {genUI?.task && (
+                              <motion.div
+                                initial={{ opacity: 0, y: 8 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: 0.1, duration: 0.3 }}
+                                style={{ marginTop: 8 }}
+                              >
+                                <div style={{ ...ss.bookingCard, padding: "10px 14px" }}>
+                                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: genUI.task.notes ? 6 : 0 }}>
+                                    <Check size={16} style={{ color: "#059669" }} />
+                                    <span style={{ fontWeight: 600, fontSize: 14, color: "#1e1e1e" }}>{genUI.task.title}</span>
+                                  </div>
+                                  {genUI.task.notes && <div style={ss.bookingDetail}>{genUI.task.notes}</div>}
+                                </div>
+                              </motion.div>
+                            )}
+
+                            {/* Generative UI: orders */}
+                            {genUI?.orders && genUI.orders.length > 0 && (
+                              <motion.div
+                                initial={{ opacity: 0, y: 8 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: 0.1, duration: 0.3 }}
+                                style={{ marginTop: 8, display: "flex", flexDirection: "column", gap: 6, width: "100%", maxWidth: 360 }}
+                              >
+                                {genUI.orders.map((order, idx) => (
+                                  <div key={idx} style={ss.bookingCard}>
+                                    <div style={ss.bookingRow}><span style={ss.bookingLabel}>Order</span><span style={ss.bookingValue}>{order.name}</span></div>
+                                    <div style={ss.bookingRow}><span style={ss.bookingLabel}>Total</span><span style={{ ...ss.bookingValue, color: PRIMARY_COLOR }}>{formatPrice(order.total_price)}</span></div>
+                                    <div style={ss.bookingRow}><span style={ss.bookingLabel}>Date</span><span style={ss.bookingValue}>{order.created_at ? new Date(order.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : ""}</span></div>
+                                    {order.status && <div style={{ ...ss.bookingDetail, marginTop: 6, textTransform: "capitalize" }}>{order.status}</div>}
+                                  </div>
+                                ))}
+                              </motion.div>
+                            )}
                           </div>
                         </motion.div>
                       );
