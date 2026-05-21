@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, type KeyboardEvent } from "react";
 import { createRoot } from "react-dom/client";
-import { RotateCw, X, ArrowUp, Loader2, Check } from "lucide-react";
+import { RotateCw, X, ArrowUp, Loader2, Check, Square } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import ReactMarkdown from "react-markdown";
 import remarkBreaks from "remark-breaks";
@@ -92,6 +92,11 @@ function ChatWidget() {
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
+
+  const handleStop = () => {
+    abortRef.current?.abort();
+    setIsLoading(false);
+  };
 
   const handleSend = async (textOverride?: string) => {
     const textToSend = textOverride || inputValue;
@@ -352,7 +357,12 @@ function ChatWidget() {
               <div style={ss.inputWrap}>
                 <div style={{ ...ss.inputBar, borderColor: inputFocused ? PRIMARY_COLOR : "#e5e7eb", boxShadow: inputFocused ? "0 4px 12px rgba(0,0,0,0.15)" : "none" }}>
                   <input type="text" value={inputValue} onChange={(e) => setInputValue(e.target.value)} onKeyDown={handleKeyDown} onFocus={() => setInputFocused(true)} onBlur={() => setInputFocused(false)} placeholder="Message..." disabled={isLoading} style={ss.input} />
-                  <button onClick={() => handleSend()} disabled={isInputEmpty || isLoading} style={ss.sendBtn(!isInputEmpty && !isLoading)}><ArrowUp size={18} strokeWidth={2.5} /></button>
+                  <button
+                    onClick={() => isLoading ? handleStop() : handleSend()}
+                    style={ss.sendBtn(isLoading || (!isInputEmpty && !isLoading))}
+                  >
+                    {isLoading ? <Square size={14} /> : <ArrowUp size={18} strokeWidth={2.5} />}
+                  </button>
                 </div>
               </div>
             </div>
