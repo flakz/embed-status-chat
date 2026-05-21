@@ -93,6 +93,19 @@ function ChatWidget() {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
+  const handleSendRef = useRef(handleSend);
+  handleSendRef.current = handleSend;
+
+  useEffect(() => {
+    (window as any).marno = {
+      open: () => setIsOpen(true),
+      close: () => setIsOpen(false),
+      toggle: () => setIsOpen((prev) => !prev),
+      send: (text: string) => handleSendRef.current(text),
+    };
+    return () => { delete (window as any).marno; };
+  }, []);
+
   const handleStop = () => {
     abortRef.current?.abort();
     setIsLoading(false);
