@@ -82,6 +82,7 @@ function ChatWidget() {
   const [isOpen, setIsOpen] = useState(false);
   const [toggleHover, setToggleHover] = useState(false);
   const [toggleActive, setToggleActive] = useState(false);
+  const [inputFocused, setInputFocused] = useState(false);
   const sessionIdRef = useRef<string>(crypto.randomUUID());
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const abortRef = useRef<AbortController | null>(null);
@@ -349,8 +350,8 @@ function ChatWidget() {
               </div>
 
               <div style={ss.inputWrap}>
-                <div style={ss.inputBar}>
-                  <input type="text" value={inputValue} onChange={(e) => setInputValue(e.target.value)} onKeyDown={handleKeyDown} placeholder="Message..." disabled={isLoading} style={ss.input} />
+                <div style={{ ...ss.inputBar, borderColor: inputFocused ? PRIMARY_COLOR : "#e5e7eb" }}>
+                  <input type="text" value={inputValue} onChange={(e) => setInputValue(e.target.value)} onKeyDown={handleKeyDown} onFocus={() => setInputFocused(true)} onBlur={() => setInputFocused(false)} placeholder="Message..." disabled={isLoading} style={ss.input} />
                   <button onClick={() => handleSend()} disabled={isInputEmpty || isLoading} style={ss.sendBtn(!isInputEmpty && !isLoading)}><ArrowUp size={18} strokeWidth={2.5} /></button>
                 </div>
               </div>
