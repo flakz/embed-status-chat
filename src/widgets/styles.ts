@@ -127,21 +127,19 @@ export const ss = {
     pointerEvents: "none",
   }),
   inputBar: {
-    display: "flex", alignItems: "flex-end",
+    display: "flex", alignItems: "center",
     borderRadius: 24, background: "#fff", border: "2px solid #e5e7eb",
-    pointerEvents: "auto", paddingRight: 4,
+    pointerEvents: "auto",
   } as React.CSSProperties,
   input: {
     flex: 1, background: "transparent", border: "none", outline: "none",
     color: "#111827",
-    padding: "9px 0 9px 18px", fontSize: 15, fontFamily: "inherit",
+    padding: "10px 0 10px 20px", fontSize: 15, fontFamily: "inherit",
     resize: "none", overflowY: "auto", maxHeight: 120,
     lineHeight: 1.4,
   } as React.CSSProperties,
-  sendBtnWrap: {
-    padding: "0 0 6px 0", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
-  } as React.CSSProperties,
   sendBtn: (active: boolean): React.CSSProperties => ({
+    flexShrink: 0, marginRight: 4,
     width: 30, height: 30, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center",
     border: "none", cursor: active ? "pointer" : "not-allowed",
     background: active ? PRIMARY_COLOR : "#E5E5E5", color: active ? "#fff" : "#8C8C8C",
