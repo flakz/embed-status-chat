@@ -66,16 +66,22 @@ export const ss: Record<string, StyleValue> = {
   msgRowUser: { display: "flex", flexDirection: "column", gap: 4, width: "100%", alignItems: "flex-end" } as React.CSSProperties,
   msgRowBot: { display: "flex", flexDirection: "column", gap: 4, width: "100%", alignItems: "flex-start" } as React.CSSProperties,
   bubbleBot: {
-    padding: "8px 16px", borderRadius: 12, borderBottomLeftRadius: 4,
-    fontSize: getFontSizes().chatBubble, width: "fit-content", maxWidth: "88%", lineHeight: 1.375,
-    background: "#F0F2F5", color: "#1E1E1E", overflow: "hidden",
-  } as React.CSSProperties,
+    get: (): React.CSSProperties => ({
+      padding: "8px 16px", borderRadius: 12, borderBottomLeftRadius: 4,
+      fontSize: getFontSizes().chatBubble, width: "fit-content", maxWidth: "88%", lineHeight: 1.375,
+      background: "#F0F2F5", color: "#1E1E1E", overflow: "hidden",
+    }),
+    enumerable: true,
+  },
   thinking: {
-    display: "flex", alignItems: "center", gap: 8,
-    padding: "8px 16px", borderRadius: 12, borderBottomLeftRadius: 4,
-    fontSize: getFontSizes().thinking, width: "fit-content", maxWidth: "88%",
-    background: "#F0F2F5", color: "#9ca3af", overflow: "hidden",
-  } as React.CSSProperties,
+    get: (): React.CSSProperties => ({
+      display: "flex", alignItems: "center", gap: 8,
+      padding: "8px 16px", borderRadius: 12, borderBottomLeftRadius: 4,
+      fontSize: getFontSizes().thinking, width: "fit-content", maxWidth: "88%",
+      background: "#F0F2F5", color: "#9ca3af", overflow: "hidden",
+    }),
+    enumerable: true,
+  },
   toolCardDone: {
     display: "flex", alignItems: "center", gap: 8,
     padding: "6px 14px", borderRadius: 12, borderBottomLeftRadius: 4,
@@ -90,8 +96,14 @@ export const ss: Record<string, StyleValue> = {
   bookingHeader: { display: "flex", alignItems: "center", gap: 8, marginBottom: 10 } as React.CSSProperties,
   bookingTitle: { fontWeight: 600, fontSize: 15, color: "#1e1e1e" } as React.CSSProperties,
   bookingRow: { display: "flex", justifyContent: "space-between", alignItems: "flex-start", padding: "6px 0", borderBottom: "1px solid #f3f4f6", gap: 8 } as React.CSSProperties,
-  bookingLabel: { fontSize: getFontSizes().label, color: "#6b7280", flexShrink: 0 } as React.CSSProperties,
-  bookingValue: { fontSize: getFontSizes().label, fontWeight: 500, color: "#1e1e1e", textAlign: "right", wordBreak: "break-word", overflowWrap: "break-word" } as React.CSSProperties,
+  bookingLabel: {
+    get: (): React.CSSProperties => ({ fontSize: getFontSizes().label, color: "#6b7280", flexShrink: 0 }),
+    enumerable: true,
+  },
+  bookingValue: {
+    get: (): React.CSSProperties => ({ fontSize: getFontSizes().label, fontWeight: 500, color: "#1e1e1e", textAlign: "right", wordBreak: "break-word", overflowWrap: "break-word" }),
+    enumerable: true,
+  },
   bookingDetail: {
     marginTop: 10, padding: "8px 10px", background: "#f0fdf4",
     borderRadius: 8, fontSize: 13, color: "#065f46", lineHeight: 1.5,
@@ -121,12 +133,15 @@ export const ss: Record<string, StyleValue> = {
     pointerEvents: "auto",
   } as React.CSSProperties,
   input: {
-    flex: 1, background: "transparent", border: "none", outline: "none",
-    color: "#111827",
-    padding: "10px 44px 10px 20px", fontSize: getFontSizes().input, fontFamily: "inherit",
-    resize: "none", overflowY: "auto", maxHeight: 120,
-    lineHeight: 1.4,
-  } as React.CSSProperties,
+    get: (): React.CSSProperties => ({
+      flex: 1, background: "transparent", border: "none", outline: "none",
+      color: "#111827",
+      padding: "10px 44px 10px 20px", fontSize: getFontSizes().input, fontFamily: "inherit",
+      resize: "none", overflowY: "auto", maxHeight: 120,
+      lineHeight: 1.4,
+    }),
+    enumerable: true,
+  },
   sendBtn: (active: boolean): React.CSSProperties => ({
     position: "absolute", bottom: 5, right: 5,
     width: 30, height: 30, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center",
