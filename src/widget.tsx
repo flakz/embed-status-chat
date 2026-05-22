@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useCallback } from "react";
+import React, { useState, useRef, useEffect, useCallback, type KeyboardEvent } from "react";
 import { createRoot } from "react-dom/client";
 import { RotateCw, X, ArrowUp, Loader2, Check } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
@@ -216,6 +216,10 @@ function ChatWidget() {
     }
   }, [inputValue, config]);
 
+  const handleKeyDown = useCallback((e: KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") { e.preventDefault(); handleSend(); }
+  }, [handleSend]);
+
   const handleResetClick = useCallback(() => {
     setRotateKey((k) => k + 1);
     setConfirmReset(true);
@@ -432,22 +436,15 @@ function ChatWidget() {
                       transition={{ duration: 0.2, ease: [0.25, 0.1, 0.25, 1] }}
                       style={{ ...ss.inputBar, borderColor: inputFocused ? getPrimaryColor() + "99" : "#e5e7eb", boxShadow: "0 4px 12px rgba(0,0,0,0.15)" }}
                     >
-                      <textarea
+                      <input
+                        type="text"
                         value={inputValue}
-                        onChange={(e) => {
-                          setInputValue(e.target.value);
-                          const el = e.target;
-                          el.style.height = "auto";
-                          el.style.height = Math.min(el.scrollHeight, 120) + "px";
-                        }}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSend(); }
-                        }}
+                        onChange={(e) => setInputValue(e.target.value)}
+                        onKeyDown={handleKeyDown}
                         onFocus={() => setInputFocused(true)}
                         onBlur={() => setInputFocused(false)}
                         placeholder="Message..."
                         disabled={isLoading}
-                        rows={1}
                         style={ss.input}
                         aria-label="Type a message"
                       />
