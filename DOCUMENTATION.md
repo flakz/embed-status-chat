@@ -71,6 +71,10 @@ window.MarnoChatConfig = {
   kbSlug: "kbase",
   // Identifier passed to your n8n workflow (e.g., for knowledge base selection)
 
+  instructId: "",
+  // UUID that tells n8n which instruction set/agent persona to use (e.g., "a1b2c3d4-e5f6-...")
+  // If blank, n8n uses a default instruction set.
+
   suggestions: [
     { label: "Get started", prompt: "How do I get started?" },
     { label: "Pricing", prompt: "What are the pricing plans?" },

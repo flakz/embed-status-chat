@@ -20,6 +20,7 @@ function getConfig() {
     fontFamily: c?.fontFamily || "Karla",
     webhookUrl: c?.webhookUrl || "https://n8n.marno.pro/webhook/marno-chat",
     kbSlug: c?.kbSlug || "kbase",
+    instructId: c?.instructId || "",
     suggestions: c?.suggestions || [
       { label: "Get started", prompt: "How do I get started with the platform?" },
       { label: "See templates", prompt: "Can you show me the available templates?" },
@@ -120,7 +121,7 @@ function ChatWidget() {
       const res = await fetch(config.webhookUrl, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ query: trimmed, sessionId: sessionIdRef.current, slug: config.kbSlug }),
+        body: JSON.stringify({ query: trimmed, sessionId: sessionIdRef.current, slug: config.kbSlug, instructId: config.instructId }),
         signal: controller.signal,
       });
 

@@ -89,6 +89,7 @@ declare global {
     MarnoChatConfig?: {
       webhookUrl?: string;
       kbSlug?: string;
+      instructId?: string;
       brandName?: string;
       brandLogo?: string;
       primaryColor?: string;
