@@ -262,7 +262,14 @@ function ChatWidget() {
       close: () => setIsOpen(false),
       toggle: () => setIsOpen((prev) => !prev),
       send: (text: string) => handleSendRef.current(text),
-      _setConfig: (newConfig: Record<string, unknown>) => setConfig((prev: Record<string, unknown>) => ({ ...prev, ...newConfig })),
+      _setConfig: (newConfig: Record<string, unknown>) => setConfig((prev: Record<string, unknown>) => {
+        const merged = { ...prev }
+        for (const key of Object.keys(newConfig)) {
+          const val = (newConfig as Record<string, unknown>)[key]
+          if (val !== undefined) (merged as Record<string, unknown>)[key] = val
+        }
+        return merged
+      }),
     };
     return () => { delete window.marno; };
   }, []);
