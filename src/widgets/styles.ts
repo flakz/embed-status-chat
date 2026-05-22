@@ -127,9 +127,9 @@ export const ss = {
     pointerEvents: "none",
   }),
   inputBar: {
-    position: "relative", display: "flex",
+    position: "relative", display: "flex", alignItems: "flex-end",
     borderRadius: 24, background: "#fff", border: "2px solid #e5e7eb",
-    pointerEvents: "auto",
+    pointerEvents: "auto", minHeight: 44,
   } as React.CSSProperties,
   input: {
     width: "100%", background: "transparent", border: "none", outline: "none",
@@ -139,7 +139,7 @@ export const ss = {
     lineHeight: 1.4,
   } as React.CSSProperties,
   sendBtn: (active: boolean): React.CSSProperties => ({
-    position: "absolute", top: "50%", transform: "translateY(-50%)", right: 5,
+    position: "absolute", bottom: 6, right: 5,
     width: 30, height: 30, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center",
     border: "none", cursor: active ? "pointer" : "not-allowed",
     background: active ? PRIMARY_COLOR : "#E5E5E5", color: active ? "#fff" : "#8C8C8C",
