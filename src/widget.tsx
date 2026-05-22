@@ -523,11 +523,30 @@ function mount() {
   const root = document.createElement("div");
   root.id = "marno-widget-root";
   document.body.appendChild(root);
-  createRoot(root).render(
-    <ErrorBoundary>
-      <ChatWidget />
-    </ErrorBoundary>
-  );
+
+  let configKey = 0;
+
+  const render = () => {
+    createRoot(root).render(
+      <ErrorBoundary key={configKey}>
+        <ChatWidget />
+      </ErrorBoundary>
+    )
+  }
+
+  render()
+
+  // Expose updateConfig for runtime config changes
+  window.marno = {
+    ...window.marno,
+    updateConfig: (newConfig?: Partial<typeof window.MarnoChatConfig>) => {
+      if (newConfig) {
+        window.MarnoChatConfig = { ...window.MarnoChatConfig, ...newConfig } as typeof window.MarnoChatConfig
+      }
+      configKey++
+      render()
+    },
+  }
 }
 
 if (document.readyState === "loading") {
