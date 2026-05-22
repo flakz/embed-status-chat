@@ -88,6 +88,14 @@ function ChatWidget() {
     { id: crypto.randomUUID(), role: "system", text: config.greeting2 },
   ]);
   const [inputValue, setInputValue] = useState("");
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // Reset textarea height when input is cleared
+  useEffect(() => {
+    if (inputValue === "" && textareaRef.current) {
+      textareaRef.current.style.height = "auto";
+    }
+  }, [inputValue]);
   const [isLoading, setIsLoading] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const [confirmReset, setConfirmReset] = useState(false);
@@ -465,6 +473,7 @@ function ChatWidget() {
                       style={{ ...ss.inputBar, borderColor: inputFocused ? getPrimaryColor() + "99" : "#e5e7eb", boxShadow: "0 4px 12px rgba(0,0,0,0.15)" }}
                     >
                       <textarea
+                        ref={textareaRef}
                         value={inputValue}
                         onChange={(e) => {
                           setInputValue(e.target.value);
