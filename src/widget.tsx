@@ -257,6 +257,7 @@ function ChatWidget() {
 
   useEffect(() => {
     window.marno = {
+      ...window.marno,
       open: () => setIsOpen(true),
       close: () => setIsOpen(false),
       toggle: () => setIsOpen((prev) => !prev),
