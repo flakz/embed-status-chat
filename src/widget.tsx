@@ -96,6 +96,7 @@ function ChatWidget() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const abortRef = useRef<AbortController | null>(null);
   const typingAbortRef = useRef(new AbortController());
+  const skipGreetingAnimRef = useRef(false);
 
   const handleStop = useCallback(() => {
     abortRef.current?.abort();
@@ -212,6 +213,7 @@ function ChatWidget() {
     abortRef.current?.abort();
     typingAbortRef.current.abort();
     typingAbortRef.current = new AbortController();
+    skipGreetingAnimRef.current = true;
     setMessages([
       { id: crypto.randomUUID(), role: "system", text: config.greeting1 },
       { id: crypto.randomUUID(), role: "system", text: config.greeting2 },
@@ -322,11 +324,16 @@ function ChatWidget() {
                       const parts = isUser ? [msg.text] : msg.text.split(/(?:\r?\n){2,}/).filter((t) => t.trim().length > 0);
                       if (parts.length === 0 && isAi) parts.push("");
                       const genUI = isAi ? msg.genUI : undefined;
+
+                      const isGreeting = msg.role === "system";
+                      const skipAnim = isGreeting && skipGreetingAnimRef.current;
+                      if (skipAnim) skipGreetingAnimRef.current = false;
+
                       return (
                         <motion.div
                           layout={isUser ? true : "position"}
                           key={msg.id}
-                          initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                          initial={skipAnim ? false : { opacity: 0, scale: 0.95, y: 20 }}
                           animate={{ opacity: 1, scale: 1, y: 0 }}
                           exit={{ opacity: 0, scale: 0.95, transition: { duration: 0.15 } }}
                           transition={{ duration: 0.3, ease: "easeOut" }}
