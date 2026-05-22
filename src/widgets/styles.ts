@@ -186,7 +186,7 @@ Object.defineProperties(ss, {
   suggestBtn: {
     get: (): React.CSSProperties => ({
       background: getPrimaryLight(), color: getPrimaryColor(), border: "none",
-      borderRadius: 10, padding: "8px 14px", fontSize: 14.5, fontWeight: 500,
+      borderRadius: 10, padding: "8px 14px", fontSize: 13.5, fontWeight: 500,
       cursor: "pointer", fontFamily: "inherit", outline: "none",
     }),
     enumerable: true,
