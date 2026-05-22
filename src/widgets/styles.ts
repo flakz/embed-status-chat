@@ -60,7 +60,7 @@ export const ss: Record<string, StyleValue> = {
   msgRowBot: { display: "flex", flexDirection: "column", gap: 6, width: "100%", alignItems: "flex-start" } as React.CSSProperties,
   bubbleBot: {
     padding: "8px 16px", borderRadius: 12, borderBottomLeftRadius: 4,
-    fontSize: 15, width: "fit-content", maxWidth: "88%", lineHeight: 1.375,
+    fontSize: 14, width: "fit-content", maxWidth: "88%", lineHeight: 1.375,
     background: "#F0F2F5", color: "#1E1E1E", overflow: "hidden",
   } as React.CSSProperties,
   thinking: {
@@ -161,7 +161,7 @@ Object.defineProperties(ss, {
   bubbleUser: {
     get: (): React.CSSProperties => ({
       padding: "8px 16px", borderRadius: 12, borderBottomRightRadius: 4,
-      fontSize: 15, width: "fit-content", maxWidth: "88%", lineHeight: 1.375,
+      fontSize: 14, width: "fit-content", maxWidth: "88%", lineHeight: 1.375,
       background: getPrimaryColor(), color: "#fff", overflow: "hidden",
     }),
     enumerable: true,
