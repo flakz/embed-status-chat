@@ -301,10 +301,10 @@ function ChatWidget() {
                           <motion.div
                             layout
                             key={msg.id}
-                            initial={{ opacity: 0, scale: 0.95, y: 10 }}
-                            animate={{ opacity: 1, scale: 1, y: 0 }}
-                            exit={{ opacity: 0, scale: 0.95 }}
-                            transition={{ duration: 0.3, ease: "easeOut" }}
+                            initial={{ opacity: 0, y: 4 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, transition: { duration: 0.12 } }}
+                            transition={{ duration: 0.18, ease: "easeOut" }}
                             style={{ marginTop: isRoleChange ? 12 : 0 }}
                           >
                             <div style={ss.msgRowBot}>
@@ -329,10 +329,10 @@ function ChatWidget() {
                         <motion.div
                           layout={isUser ? true : "position"}
                           key={msg.id}
-                          initial={{ opacity: 0, scale: 0.95, y: 20 }}
-                          animate={{ opacity: 1, scale: 1, y: 0 }}
-                          exit={{ opacity: 0, scale: 0.95, transition: { duration: 0.15 } }}
-                          transition={{ duration: 0.3, ease: "easeOut" }}
+                          initial={{ opacity: 0, y: 4 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, transition: { duration: 0.12 } }}
+                          transition={{ duration: 0.18, ease: "easeOut" }}
                           style={{ marginTop: isRoleChange ? 12 : 0 }}
                         >
                           <div style={isUser ? ss.msgRowUser : ss.msgRowBot}>
@@ -354,13 +354,13 @@ function ChatWidget() {
                     })}
 
                     {isLoading && (
-                      <motion.div layout key="loading-indicator" initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, scale: 0.9, transition: { duration: 0.15 } }} transition={{ duration: 0.3, ease: "easeOut" }} style={{ marginTop: 12 }}>
+                      <motion.div layout key="loading-indicator" initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, transition: { duration: 0.12 } }} transition={{ duration: 0.18, ease: "easeOut" }} style={{ marginTop: 12 }}>
                         <div style={ss.thinking}><Loader2 size={16} style={{ animation: "marno-spin 1s linear infinite", color: "#6b7280" }} /><span>Thinking...</span></div>
                       </motion.div>
                     )}
 
                     {!isLoading && messages.length === 2 && messages[0].role === "system" && (
-                      <motion.div layout key="suggestions" initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10, filter: "blur(4px)", transition: { duration: 0.15 } }} transition={{ duration: 0.3, delay: 0.1, ease: "easeOut" }}>
+                      <motion.div layout key="suggestions" initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, transition: { duration: 0.12 } }} transition={{ duration: 0.18, delay: 0.05, ease: "easeOut" }}>
                         <div style={ss.suggestions}>
                           {config.suggestions.map((s) => (
                             <motion.button layoutId={`suggestion-${s.prompt}`} key={s.prompt} onClick={() => handleSend(s.prompt)} style={ss.suggestBtn}>{s.label}</motion.button>
