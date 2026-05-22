@@ -139,7 +139,7 @@ export const ss = {
     lineHeight: 1.4,
   } as React.CSSProperties,
   sendBtn: (active: boolean): React.CSSProperties => ({
-    flexShrink: 0, marginBottom: 3, marginRight: 4,
+    flexShrink: 0, marginBottom: 6, marginRight: 4,
     width: 30, height: 30, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center",
     border: "none", cursor: active ? "pointer" : "not-allowed",
     background: active ? PRIMARY_COLOR : "#E5E5E5", color: active ? "#fff" : "#8C8C8C",
