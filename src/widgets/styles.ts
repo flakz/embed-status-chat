@@ -12,6 +12,13 @@ export function getPrimaryColor(): string {
   return window.MarnoChatConfig?.primaryColor || "#0D72FF";
 }
 
+type FontSizes = { chatBubble?: number; thinking?: number; suggestionBtn?: number; input?: number; label?: number };
+const DEFAULT_FONT_SIZES: Required<FontSizes> = { chatBubble: 14, thinking: 13.5, suggestionBtn: 13.5, input: 14, label: 13 };
+export function getFontSizes(): Required<FontSizes> {
+  const fs = (window.MarnoChatConfig as Record<string, unknown>)?.fontSizes as FontSizes | undefined;
+  return { ...DEFAULT_FONT_SIZES, ...fs };
+}
+
 export function getPrimaryLight(): string {
   const color = getPrimaryColor();
   const [pr, pg, pb] = hexToRgb(color);
@@ -60,13 +67,13 @@ export const ss: Record<string, StyleValue> = {
   msgRowBot: { display: "flex", flexDirection: "column", gap: 4, width: "100%", alignItems: "flex-start" } as React.CSSProperties,
   bubbleBot: {
     padding: "8px 16px", borderRadius: 12, borderBottomLeftRadius: 4,
-    fontSize: 14, width: "fit-content", maxWidth: "88%", lineHeight: 1.375,
+    fontSize: getFontSizes().chatBubble, width: "fit-content", maxWidth: "88%", lineHeight: 1.375,
     background: "#F0F2F5", color: "#1E1E1E", overflow: "hidden",
   } as React.CSSProperties,
   thinking: {
     display: "flex", alignItems: "center", gap: 8,
     padding: "8px 16px", borderRadius: 12, borderBottomLeftRadius: 4,
-    fontSize: 13.5, width: "fit-content", maxWidth: "88%",
+    fontSize: getFontSizes().thinking, width: "fit-content", maxWidth: "88%",
     background: "#F0F2F5", color: "#9ca3af", overflow: "hidden",
   } as React.CSSProperties,
   toolCardDone: {
@@ -83,8 +90,8 @@ export const ss: Record<string, StyleValue> = {
   bookingHeader: { display: "flex", alignItems: "center", gap: 8, marginBottom: 10 } as React.CSSProperties,
   bookingTitle: { fontWeight: 600, fontSize: 15, color: "#1e1e1e" } as React.CSSProperties,
   bookingRow: { display: "flex", justifyContent: "space-between", alignItems: "flex-start", padding: "6px 0", borderBottom: "1px solid #f3f4f6", gap: 8 } as React.CSSProperties,
-  bookingLabel: { fontSize: 13, color: "#6b7280", flexShrink: 0 } as React.CSSProperties,
-  bookingValue: { fontSize: 13, fontWeight: 500, color: "#1e1e1e", textAlign: "right", wordBreak: "break-word", overflowWrap: "break-word" } as React.CSSProperties,
+  bookingLabel: { fontSize: getFontSizes().label, color: "#6b7280", flexShrink: 0 } as React.CSSProperties,
+  bookingValue: { fontSize: getFontSizes().label, fontWeight: 500, color: "#1e1e1e", textAlign: "right", wordBreak: "break-word", overflowWrap: "break-word" } as React.CSSProperties,
   bookingDetail: {
     marginTop: 10, padding: "8px 10px", background: "#f0fdf4",
     borderRadius: 8, fontSize: 13, color: "#065f46", lineHeight: 1.5,
@@ -116,7 +123,7 @@ export const ss: Record<string, StyleValue> = {
   input: {
     flex: 1, background: "transparent", border: "none", outline: "none",
     color: "#111827",
-    padding: "10px 44px 10px 20px", fontSize: 14, fontFamily: "inherit",
+    padding: "10px 44px 10px 20px", fontSize: getFontSizes().input, fontFamily: "inherit",
     resize: "none", overflowY: "auto", maxHeight: 120,
     lineHeight: 1.4,
   } as React.CSSProperties,
@@ -161,7 +168,7 @@ Object.defineProperties(ss, {
   bubbleUser: {
     get: (): React.CSSProperties => ({
       padding: "8px 16px", borderRadius: 12, borderBottomRightRadius: 4,
-      fontSize: 14, width: "fit-content", maxWidth: "88%", lineHeight: 1.375,
+      fontSize: getFontSizes().chatBubble, width: "fit-content", maxWidth: "88%", lineHeight: 1.375,
       background: getPrimaryColor(), color: "#fff", overflow: "hidden",
     }),
     enumerable: true,
@@ -172,7 +179,7 @@ Object.defineProperties(ss, {
       return {
         display: "flex", alignItems: "center", gap: 8,
         padding: "6px 14px", borderRadius: 12, borderBottomLeftRadius: 4,
-        fontSize: 13.5, width: "fit-content", maxWidth: "88%",
+        fontSize: getFontSizes().label, width: "fit-content", maxWidth: "88%",
         background: getPrimaryLight(), color: c,
         border: `1px solid ${c}20`,
       };
@@ -186,7 +193,7 @@ Object.defineProperties(ss, {
   suggestBtn: {
     get: (): React.CSSProperties => ({
       background: getPrimaryLight(), color: getPrimaryColor(), border: "none",
-      borderRadius: 10, padding: "8px 14px", fontSize: 13.5, fontWeight: 500,
+      borderRadius: 10, padding: "8px 14px", fontSize: getFontSizes().suggestionBtn, fontWeight: 500,
       cursor: "pointer", fontFamily: "inherit", outline: "none",
     }),
     enumerable: true,
