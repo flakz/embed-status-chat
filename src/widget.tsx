@@ -96,7 +96,6 @@ function ChatWidget() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const abortRef = useRef<AbortController | null>(null);
   const typingAbortRef = useRef(new AbortController());
-  const skipGreetingAnimRef = useRef(false);
 
   const handleStop = useCallback(() => {
     abortRef.current?.abort();
@@ -213,7 +212,6 @@ function ChatWidget() {
     abortRef.current?.abort();
     typingAbortRef.current.abort();
     typingAbortRef.current = new AbortController();
-    skipGreetingAnimRef.current = true;
     setMessages([
       { id: crypto.randomUUID(), role: "system", text: config.greeting1 },
       { id: crypto.randomUUID(), role: "system", text: config.greeting2 },
@@ -287,7 +285,7 @@ function ChatWidget() {
 
               <div style={{ ...ss.msgArea, opacity: confirmReset ? 0.4 : 1, transition: "opacity 0.25s ease", pointerEvents: confirmReset ? "none" : "auto" }}>
                 <div style={ss.msgList} role="log" aria-live="polite">
-                  <AnimatePresence mode="popLayout" initial={true}>
+                  <AnimatePresence mode="wait" initial={true}>
                     {messages.map((msg, index) => {
                       const prevMsg = index > 0 ? messages[index - 1] : null;
                       const isRoleChange = prevMsg && (prevMsg.role !== msg.role || (prevMsg.role === "system" && msg.role === "model"));
@@ -325,15 +323,11 @@ function ChatWidget() {
                       if (parts.length === 0 && isAi) parts.push("");
                       const genUI = isAi ? msg.genUI : undefined;
 
-                      const isGreeting = msg.role === "system";
-                      const skipAnim = isGreeting && skipGreetingAnimRef.current;
-                      if (skipAnim) skipGreetingAnimRef.current = false;
-
                       return (
                         <motion.div
                           layout={isUser ? true : "position"}
                           key={msg.id}
-                          initial={skipAnim ? false : { opacity: 0, scale: 0.95, y: 20 }}
+                          initial={{ opacity: 0, scale: 0.95, y: 20 }}
                           animate={{ opacity: 1, scale: 1, y: 0 }}
                           exit={{ opacity: 0, scale: 0.95, transition: { duration: 0.15 } }}
                           transition={{ duration: 0.3, ease: "easeOut" }}
