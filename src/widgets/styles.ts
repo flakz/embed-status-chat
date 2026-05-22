@@ -29,18 +29,11 @@ export function getPrimaryLight(): string {
   );
 }
 
-// Legacy exports — kept for compatibility but now dynamic getters
-// Use getPrimaryColor() / getPrimaryLight() directly in new code
-let _PRIMARY_COLOR = getPrimaryColor();
-export { _PRIMARY_COLOR as PRIMARY_COLOR };
-let _PRIMARY_LIGHT = getPrimaryLight();
-export { _PRIMARY_LIGHT as PRIMARY_LIGHT };
-
 const Z_INDEX = { toggle: 2147483646, panel: 2147483647 } as const;
 
 export type StyleValue = React.CSSProperties | ((...args: (string | number | boolean | undefined)[]) => React.CSSProperties);
 
-// Use Object.defineProperties to make color-dependent styles dynamic getters
+// Static styles (no dynamic values)
 export const ss: Record<string, StyleValue> = {
   panel: {
     position: "fixed", bottom: 74, right: 24, zIndex: Z_INDEX.panel,
@@ -65,23 +58,6 @@ export const ss: Record<string, StyleValue> = {
   msgList: { display: "flex", flexDirection: "column", gap: 4, width: "100%", position: "relative" } as React.CSSProperties,
   msgRowUser: { display: "flex", flexDirection: "column", gap: 4, width: "100%", alignItems: "flex-end" } as React.CSSProperties,
   msgRowBot: { display: "flex", flexDirection: "column", gap: 4, width: "100%", alignItems: "flex-start" } as React.CSSProperties,
-  bubbleBot: {
-    get: (): React.CSSProperties => ({
-      padding: "8px 16px", borderRadius: 12, borderBottomLeftRadius: 4,
-      fontSize: getFontSizes().chatBubble, width: "fit-content", maxWidth: "88%", lineHeight: 1.375,
-      background: "#F0F2F5", color: "#1E1E1E", overflow: "hidden",
-    }),
-    enumerable: true,
-  },
-  thinking: {
-    get: (): React.CSSProperties => ({
-      display: "flex", alignItems: "center", gap: 8,
-      padding: "8px 16px", borderRadius: 12, borderBottomLeftRadius: 4,
-      fontSize: getFontSizes().thinking, width: "fit-content", maxWidth: "88%",
-      background: "#F0F2F5", color: "#9ca3af", overflow: "hidden",
-    }),
-    enumerable: true,
-  },
   toolCardDone: {
     display: "flex", alignItems: "center", gap: 8,
     padding: "6px 14px", borderRadius: 12, borderBottomLeftRadius: 4,
@@ -96,14 +72,6 @@ export const ss: Record<string, StyleValue> = {
   bookingHeader: { display: "flex", alignItems: "center", gap: 8, marginBottom: 10 } as React.CSSProperties,
   bookingTitle: { fontWeight: 600, fontSize: 15, color: "#1e1e1e" } as React.CSSProperties,
   bookingRow: { display: "flex", justifyContent: "space-between", alignItems: "flex-start", padding: "6px 0", borderBottom: "1px solid #f3f4f6", gap: 8 } as React.CSSProperties,
-  bookingLabel: {
-    get: (): React.CSSProperties => ({ fontSize: getFontSizes().label, color: "#6b7280", flexShrink: 0 }),
-    enumerable: true,
-  },
-  bookingValue: {
-    get: (): React.CSSProperties => ({ fontSize: getFontSizes().label, fontWeight: 500, color: "#1e1e1e", textAlign: "right", wordBreak: "break-word", overflowWrap: "break-word" }),
-    enumerable: true,
-  },
   bookingDetail: {
     marginTop: 10, padding: "8px 10px", background: "#f0fdf4",
     borderRadius: 8, fontSize: 13, color: "#065f46", lineHeight: 1.5,
@@ -132,16 +100,6 @@ export const ss: Record<string, StyleValue> = {
     borderRadius: 24, background: "#fff", border: "2px solid #e5e7eb",
     pointerEvents: "auto",
   } as React.CSSProperties,
-  input: {
-    get: (): React.CSSProperties => ({
-      flex: 1, background: "transparent", border: "none", outline: "none",
-      color: "#111827",
-      padding: "10px 44px 10px 20px", fontSize: getFontSizes().input, fontFamily: "inherit",
-      resize: "none", overflowY: "auto", maxHeight: 120,
-      lineHeight: 1.4,
-    }),
-    enumerable: true,
-  },
   sendBtn: (active: boolean): React.CSSProperties => ({
     position: "absolute", bottom: 5, right: 5,
     width: 30, height: 30, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center",
@@ -171,7 +129,7 @@ export const ss: Record<string, StyleValue> = {
   } as React.CSSProperties,
 };
 
-// Dynamic getters for color-dependent styles — read fresh from window.MarnoChatConfig on each access
+// All dynamic styles (color + font-size dependent) defined as getters
 Object.defineProperties(ss, {
   header: {
     get: (): React.CSSProperties => ({
@@ -180,11 +138,28 @@ Object.defineProperties(ss, {
     }),
     enumerable: true,
   },
+  bubbleBot: {
+    get: (): React.CSSProperties => ({
+      padding: "8px 16px", borderRadius: 12, borderBottomLeftRadius: 4,
+      fontSize: getFontSizes().chatBubble, width: "fit-content", maxWidth: "88%", lineHeight: 1.375,
+      background: "#F0F2F5", color: "#1E1E1E", overflow: "hidden",
+    }),
+    enumerable: true,
+  },
   bubbleUser: {
     get: (): React.CSSProperties => ({
       padding: "8px 16px", borderRadius: 12, borderBottomRightRadius: 4,
       fontSize: getFontSizes().chatBubble, width: "fit-content", maxWidth: "88%", lineHeight: 1.375,
       background: getPrimaryColor(), color: "#fff", overflow: "hidden",
+    }),
+    enumerable: true,
+  },
+  thinking: {
+    get: (): React.CSSProperties => ({
+      display: "flex", alignItems: "center", gap: 8,
+      padding: "8px 16px", borderRadius: 12, borderBottomLeftRadius: 4,
+      fontSize: getFontSizes().thinking, width: "fit-content", maxWidth: "88%",
+      background: "#F0F2F5", color: "#9ca3af", overflow: "hidden",
     }),
     enumerable: true,
   },
@@ -201,8 +176,26 @@ Object.defineProperties(ss, {
     },
     enumerable: true,
   },
+  bookingLabel: {
+    get: (): React.CSSProperties => ({ fontSize: getFontSizes().label, color: "#6b7280", flexShrink: 0 }),
+    enumerable: true,
+  },
+  bookingValue: {
+    get: (): React.CSSProperties => ({ fontSize: getFontSizes().label, fontWeight: 500, color: "#1e1e1e", textAlign: "right", wordBreak: "break-word", overflowWrap: "break-word" }),
+    enumerable: true,
+  },
   productPrice: {
     get: (): React.CSSProperties => ({ fontSize: 13, fontWeight: 700, color: getPrimaryColor() }),
+    enumerable: true,
+  },
+  input: {
+    get: (): React.CSSProperties => ({
+      flex: 1, background: "transparent", border: "none", outline: "none",
+      color: "#111827",
+      padding: "10px 44px 10px 20px", fontSize: getFontSizes().input, fontFamily: "inherit",
+      resize: "none", overflowY: "auto", maxHeight: 120,
+      lineHeight: 1.4,
+    }),
     enumerable: true,
   },
   suggestBtn: {
