@@ -371,7 +371,17 @@ function ChatWidget() {
               </div>
 
               <div style={ss.inputWrap}>
-                {!confirmReset && (
+                {confirmReset ? (
+                  <motion.div
+                    initial={{ opacity: 0, y: 12 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.25, ease: "easeOut" }}
+                    style={ss.confirmBar}
+                  >
+                    <button onClick={handleConfirmReset} style={ss.confirmStartBtn}>Start New Chat</button>
+                    <button onClick={handleCancelReset} style={ss.confirmCancelBtn}>Cancel</button>
+                  </motion.div>
+                ) : (
                   <div style={{ ...ss.inputBar, borderColor: inputFocused ? getPrimaryColor() + "99" : "#e5e7eb", boxShadow: "0 4px 12px rgba(0,0,0,0.15)" }}>
                     <input
                       type="text"
@@ -395,20 +405,6 @@ function ChatWidget() {
                   </div>
                 )}
 
-                <AnimatePresence>
-                  {confirmReset && (
-                    <motion.div
-                      initial={{ opacity: 0, y: 12 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: 12 }}
-                      transition={{ duration: 0.25, ease: "easeOut" }}
-                      style={ss.confirmBar}
-                    >
-                      <button onClick={handleConfirmReset} style={ss.confirmStartBtn}>Start New Chat</button>
-                      <button onClick={handleCancelReset} style={ss.confirmCancelBtn}>Cancel</button>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
               </div>
             </div>
           </motion.div>
