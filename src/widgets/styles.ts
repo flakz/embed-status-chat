@@ -121,7 +121,7 @@ export const ss = {
     cursor: "pointer", fontFamily: "inherit", outline: "none",
   } as React.CSSProperties,
   inputWrap: {
-    position: "absolute", bottom: 0, left: 0, right: 0,
+    position: "absolute", bottom: 0, left: 0, right: 0, zIndex: 20,
     padding: "44px 16px 16px",
     background: "linear-gradient(to top, #fff 0%, rgba(255,255,255,0.95) 40%, transparent 100%)",
     pointerEvents: "none",
