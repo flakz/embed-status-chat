@@ -279,6 +279,12 @@ function ChatWidget() {
           const val = (newConfig as Record<string, unknown>)[key]
           if (val !== undefined) (merged as Record<string, unknown>)[key] = val
         }
+        // Translate greetings array to greeting1/greeting2
+        const greetings = (newConfig as Record<string, unknown>).greetings
+        if (Array.isArray(greetings)) {
+          (merged as Record<string, unknown>).greeting1 = greetings[0] || prev.greeting1
+          ;(merged as Record<string, unknown>).greeting2 = greetings[1] || prev.greeting2
+        }
         return merged
       }),
     };
@@ -287,7 +293,7 @@ function ChatWidget() {
       delete window.marno?.close
       delete window.marno?.toggle
       delete window.marno?.send
-      delete window.marno?._setConfig
+      // Keep _setConfig alive — dashboard's updateConfig depends on it
     };
   }, []);
 
