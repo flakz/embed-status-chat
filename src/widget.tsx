@@ -402,11 +402,8 @@ function ChatWidget() {
                       transition={{ duration: 0.25, ease: "easeOut" }}
                       style={ss.confirmBar}
                     >
-                      <span style={ss.confirmText}>Start a new chat?</span>
-                      <div style={ss.confirmActions}>
-                        <button onClick={handleCancelReset} style={ss.confirmCancelBtn}>Cancel</button>
-                        <button onClick={handleConfirmReset} style={ss.confirmStartBtn}>Start New Chat</button>
-                      </div>
+                      <button onClick={handleConfirmReset} style={ss.confirmStartBtn}>Start New Chat</button>
+                      <button onClick={handleCancelReset} style={ss.confirmCancelBtn}>Cancel</button>
                     </motion.div>
                   )}
                 </AnimatePresence>
