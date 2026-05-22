@@ -134,12 +134,12 @@ export const ss = {
   input: {
     flex: 1, background: "transparent", border: "none", outline: "none",
     color: "#111827",
-    padding: "11px 0 11px 20px", fontSize: 15, fontFamily: "inherit",
+    padding: "9px 0 9px 18px", fontSize: 15, fontFamily: "inherit",
     resize: "none", overflowY: "auto", maxHeight: 120,
     lineHeight: 1.4,
   } as React.CSSProperties,
   sendBtnWrap: {
-    padding: "0 0 8px 0", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
+    padding: "0 0 6px 0", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
   } as React.CSSProperties,
   sendBtn: (active: boolean): React.CSSProperties => ({
     width: 30, height: 30, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center",
