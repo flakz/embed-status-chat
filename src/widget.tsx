@@ -507,7 +507,7 @@ function mount() {
   width: 14px; height: 14px; flex-shrink: 0;
 }
 .marno-thinking-shimmer {
-  background: linear-gradient(110deg, #9ca3af 30%, #d1d5db 50%, #9ca3af 70%);
+  background: linear-gradient(110deg, #6b7280 30%, #9ca3af 50%, #6b7280 70%);
   background-size: 200% 100%;
   animation: marno-shimmer 1.8s ease-in-out infinite;
   -webkit-background-clip: text;
