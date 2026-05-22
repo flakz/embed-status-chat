@@ -371,40 +371,50 @@ function ChatWidget() {
               </div>
 
               <div style={ss.inputWrap}>
-                {confirmReset ? (
-                  <motion.div
-                    initial={{ opacity: 0, y: 12 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.25, ease: "easeOut" }}
-                    style={ss.confirmBar}
-                  >
-                    <button onClick={handleConfirmReset} style={ss.confirmStartBtn}>Start New Chat</button>
-                    <button onClick={handleCancelReset} style={ss.confirmCancelBtn}>Cancel</button>
-                  </motion.div>
-                ) : (
-                  <div style={{ ...ss.inputBar, borderColor: inputFocused ? getPrimaryColor() + "99" : "#e5e7eb", boxShadow: "0 4px 12px rgba(0,0,0,0.15)" }}>
-                    <input
-                      type="text"
-                      value={inputValue}
-                      onChange={(e) => setInputValue(e.target.value)}
-                      onKeyDown={handleKeyDown}
-                      onFocus={() => setInputFocused(true)}
-                      onBlur={() => setInputFocused(false)}
-                      placeholder="Message..."
-                      disabled={isLoading}
-                      style={ss.input}
-                      aria-label="Type a message"
-                    />
-                    <button
-                      onClick={() => isLoading ? handleStop() : handleSend()}
-                      style={ss.sendBtn(isLoading || (!isInputEmpty && !isLoading))}
-                      aria-label={isLoading ? "Stop generating" : "Send message"}
+                <AnimatePresence mode="wait">
+                  {confirmReset ? (
+                    <motion.div
+                      key="confirm"
+                      initial={{ opacity: 0, y: 8, scale: 0.98 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: -8, scale: 0.98 }}
+                      transition={{ duration: 0.2, ease: [0.25, 0.1, 0.25, 1] }}
+                      style={ss.confirmBar}
                     >
-                      {isLoading ? <Square size={12} fill="currentColor" /> : <ArrowUp size={18} strokeWidth={2.5} />}
-                    </button>
-                  </div>
-                )}
-
+                      <button onClick={handleConfirmReset} style={ss.confirmStartBtn}>Start New Chat</button>
+                      <button onClick={handleCancelReset} style={ss.confirmCancelBtn}>Cancel</button>
+                    </motion.div>
+                  ) : (
+                    <motion.div
+                      key="input"
+                      initial={{ opacity: 0, y: 8, scale: 0.98 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: -8, scale: 0.98 }}
+                      transition={{ duration: 0.2, ease: [0.25, 0.1, 0.25, 1] }}
+                      style={{ ...ss.inputBar, borderColor: inputFocused ? getPrimaryColor() + "99" : "#e5e7eb", boxShadow: "0 4px 12px rgba(0,0,0,0.15)" }}
+                    >
+                      <input
+                        type="text"
+                        value={inputValue}
+                        onChange={(e) => setInputValue(e.target.value)}
+                        onKeyDown={handleKeyDown}
+                        onFocus={() => setInputFocused(true)}
+                        onBlur={() => setInputFocused(false)}
+                        placeholder="Message..."
+                        disabled={isLoading}
+                        style={ss.input}
+                        aria-label="Type a message"
+                      />
+                      <button
+                        onClick={() => isLoading ? handleStop() : handleSend()}
+                        style={ss.sendBtn(isLoading || (!isInputEmpty && !isLoading))}
+                        aria-label={isLoading ? "Stop generating" : "Send message"}
+                      >
+                        {isLoading ? <Square size={12} fill="currentColor" /> : <ArrowUp size={18} strokeWidth={2.5} />}
+                      </button>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
             </div>
           </motion.div>
