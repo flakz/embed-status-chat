@@ -280,6 +280,21 @@ function ChatWidget() {
             transition={{ duration: 0.2 }}
           >
             <div style={ss.panel} role="dialog" aria-label={`Chat with ${config.brandName}`}>
+              <AnimatePresence>
+                {confirmReset && (
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.2 }}
+                    style={{
+                      position: "absolute", inset: 0, zIndex: 5,
+                      background: "rgba(0,0,0,0.15)", borderRadius: 24,
+                      pointerEvents: "none",
+                    }}
+                  />
+                )}
+              </AnimatePresence>
               <div style={ss.header}>
                 <div style={ss.headerLeft}>
                   <div style={ss.logoCircle}>
@@ -300,20 +315,6 @@ function ChatWidget() {
               </div>
 
               <div style={{ ...ss.msgArea, pointerEvents: confirmReset ? "none" : "auto" }}>
-                <AnimatePresence>
-                  {confirmReset && (
-                    <motion.div
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      exit={{ opacity: 0 }}
-                      transition={{ duration: 0.2 }}
-                      style={{
-                        position: "absolute", inset: 0, zIndex: 10,
-                        background: "rgba(0,0,0,0.15)", borderRadius: "0 0 24px 24px",
-                      }}
-                    />
-                  )}
-                </AnimatePresence>
                 <div style={ss.msgList} role="log" aria-live="polite" key={resetKeyRef.current}>
                   <AnimatePresence mode="popLayout" initial={true}>
                     {messages.map((msg, index) => {
