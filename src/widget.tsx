@@ -91,6 +91,7 @@ function ChatWidget() {
   const [isLoading, setIsLoading] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const [confirmReset, setConfirmReset] = useState(false);
+  const [rotateIcon, setRotateIcon] = useState(false);
   const [inputFocused, setInputFocused] = useState(false);
   const sessionIdRef = useRef<string>(crypto.randomUUID());
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -220,6 +221,7 @@ function ChatWidget() {
   }, [handleSend]);
 
   const handleResetClick = useCallback(() => {
+    setRotateIcon((prev) => !prev);
     setConfirmReset(true);
   }, []);
 
@@ -309,7 +311,15 @@ function ChatWidget() {
                   <span style={ss.headerTitle}>{config.brandName}</span>
                 </div>
                 <div style={ss.headerActions}>
-                  <button onClick={handleResetClick} style={ss.headerBtn} title="Reset chat" aria-label="Reset chat"><RotateCw size={18} strokeWidth={2.5} /></button>
+                  <button onClick={handleResetClick} style={ss.headerBtn} title="Reset chat" aria-label="Reset chat">
+                    <motion.span
+                      animate={{ rotate: rotateIcon ? 360 : 0 }}
+                      transition={{ duration: 0.5, ease: [0.25, 0.1, 0.25, 1] }}
+                      style={{ display: "flex" }}
+                    >
+                      <RotateCw size={18} strokeWidth={2.5} />
+                    </motion.span>
+                  </button>
                   <button onClick={() => setIsOpen(false)} style={ss.headerBtn} aria-label="Close chat"><X size={20} strokeWidth={2.5} /></button>
                 </div>
               </div>
