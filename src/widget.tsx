@@ -111,7 +111,10 @@ function ChatWidget() {
     if (!trimmed) return;
     if (!textOverride) setInputValue("");
     const userMsgObj: Message = { id: crypto.randomUUID(), role: "user", text: trimmed };
-    setMessages((prev) => [...prev, userMsgObj]);
+    setMessages((prev) => {
+      const hasGreetings = prev.length === 2 && prev[0].role === "system" && prev[1].role === "system";
+      return hasGreetings ? [userMsgObj] : [...prev, userMsgObj];
+    });
 
     abortRef.current?.abort();
     const controller = new AbortController();
