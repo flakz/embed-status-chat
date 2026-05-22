@@ -271,7 +271,13 @@ function ChatWidget() {
         return merged
       }),
     };
-    return () => { delete window.marno; };
+    return () => {
+      delete window.marno?.open
+      delete window.marno?.close
+      delete window.marno?.toggle
+      delete window.marno?.send
+      delete window.marno?._setConfig
+    };
   }, []);
 
   const isInputEmpty = inputValue.trim().length === 0;
