@@ -72,7 +72,7 @@ export const ss = {
     display: "flex", alignItems: "center", gap: 8,
     padding: "8px 16px", borderRadius: 12, borderBottomLeftRadius: 4,
     fontSize: 15, width: "fit-content", maxWidth: "88%",
-    background: "#F0F2F5", color: "#9ca3af",
+    color: "#9ca3af", overflow: "hidden",
   } as React.CSSProperties,
   toolCard: {
     display: "flex", alignItems: "center", gap: 8,
