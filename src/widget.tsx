@@ -299,7 +299,21 @@ function ChatWidget() {
                 </div>
               </div>
 
-              <div style={{ ...ss.msgArea, opacity: confirmReset ? 0.4 : 1, transition: "opacity 0.25s ease", pointerEvents: confirmReset ? "none" : "auto" }}>
+              <div style={{ ...ss.msgArea, pointerEvents: confirmReset ? "none" : "auto" }}>
+                <AnimatePresence>
+                  {confirmReset && (
+                    <motion.div
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      transition={{ duration: 0.2 }}
+                      style={{
+                        position: "absolute", inset: 0, zIndex: 10,
+                        background: "rgba(0,0,0,0.15)", borderRadius: "0 0 24px 24px",
+                      }}
+                    />
+                  )}
+                </AnimatePresence>
                 <div style={ss.msgList} role="log" aria-live="polite" key={resetKeyRef.current}>
                   <AnimatePresence mode="popLayout" initial={true}>
                     {messages.map((msg, index) => {
