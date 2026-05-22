@@ -91,7 +91,7 @@ function ChatWidget() {
   const [isLoading, setIsLoading] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const [confirmReset, setConfirmReset] = useState(false);
-  const [rotateIcon, setRotateIcon] = useState(false);
+  const [rotateIcon, setRotateIcon] = useState(0);
   const [inputFocused, setInputFocused] = useState(false);
   const sessionIdRef = useRef<string>(crypto.randomUUID());
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -221,7 +221,7 @@ function ChatWidget() {
   }, [handleSend]);
 
   const handleResetClick = useCallback(() => {
-    setRotateIcon((prev) => !prev);
+    setRotateIcon((prev) => prev + 360);
     setConfirmReset(true);
   }, []);
 
@@ -313,7 +313,7 @@ function ChatWidget() {
                 <div style={ss.headerActions}>
                   <button onClick={handleResetClick} style={ss.headerBtn} title="Reset chat" aria-label="Reset chat">
                     <motion.span
-                      animate={{ rotate: rotateIcon ? 360 : 0 }}
+                      animate={{ rotate: rotateIcon }}
                       transition={{ duration: 0.5, ease: [0.25, 0.1, 0.25, 1] }}
                       style={{ display: "flex" }}
                     >
