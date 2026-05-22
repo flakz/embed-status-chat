@@ -82,7 +82,7 @@ function GenUIBlock({ genUI }: { genUI: GenUIData }) {
 }
 
 function ChatWidget() {
-  const config = getConfig();
+  const [config, setConfig] = useState(getConfig);
   const [messages, setMessages] = useState<Message[]>(() => [
     { id: crypto.randomUUID(), role: "system", text: config.greeting1 },
     { id: crypto.randomUUID(), role: "system", text: config.greeting2 },
@@ -262,6 +262,7 @@ function ChatWidget() {
       close: () => setIsOpen(false),
       toggle: () => setIsOpen((prev) => !prev),
       send: (text: string) => handleSendRef.current(text),
+      _setConfig: (newConfig: Record<string, unknown>) => setConfig((prev: Record<string, unknown>) => ({ ...prev, ...newConfig })),
     };
     return () => { delete window.marno; };
   }, []);
@@ -525,27 +526,21 @@ function mount() {
   root.id = "marno-widget-root";
   document.body.appendChild(root);
 
-  let configKey = 0;
+  createRoot(root).render(
+    <ErrorBoundary>
+      <ChatWidget />
+    </ErrorBoundary>
+  )
 
-  const render = () => {
-    createRoot(root).render(
-      <ErrorBoundary key={configKey}>
-        <ChatWidget />
-      </ErrorBoundary>
-    )
-  }
-
-  render()
-
-  // Expose updateConfig for runtime config changes
+  // Expose updateConfig for runtime config changes — uses React setState, no remount
   window.marno = {
     ...window.marno,
     updateConfig: (newConfig?: Partial<typeof window.MarnoChatConfig>) => {
       if (newConfig) {
         window.MarnoChatConfig = { ...window.MarnoChatConfig, ...newConfig } as typeof window.MarnoChatConfig
       }
-      configKey++
-      render()
+      // Update React state directly — preserves isOpen/messages/no flicker
+      window.marno?._setConfig?.(newConfig || {})
     },
   }
 }
