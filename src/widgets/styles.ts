@@ -134,12 +134,12 @@ export const ss = {
   input: {
     flex: 1, background: "transparent", border: "none", outline: "none",
     color: "#111827",
-    padding: "10px 0 10px 20px", fontSize: 15, fontFamily: "inherit",
+    padding: "10px 0 10px 50px", fontSize: 15, fontFamily: "inherit",
     resize: "none", overflowY: "auto", maxHeight: 120,
     lineHeight: 1.4,
   } as React.CSSProperties,
   sendBtn: (active: boolean): React.CSSProperties => ({
-    flexShrink: 0, margin: "0 4px 10px 0",
+    flexShrink: 0, marginLeft: -40, marginBottom: 10, marginRight: 4,
     width: 30, height: 30, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center",
     border: "none", cursor: active ? "pointer" : "not-allowed",
     background: active ? PRIMARY_COLOR : "#E5E5E5", color: active ? "#fff" : "#8C8C8C",
