@@ -371,27 +371,29 @@ function ChatWidget() {
               </div>
 
               <div style={ss.inputWrap}>
-                <div style={{ ...ss.inputBar, borderColor: inputFocused ? getPrimaryColor() + "99" : "#e5e7eb", boxShadow: "0 4px 12px rgba(0,0,0,0.15)" }}>
-                  <input
-                    type="text"
-                    value={inputValue}
-                    onChange={(e) => setInputValue(e.target.value)}
-                    onKeyDown={handleKeyDown}
-                    onFocus={() => setInputFocused(true)}
-                    onBlur={() => setInputFocused(false)}
-                    placeholder="Message..."
-                    disabled={isLoading}
-                    style={ss.input}
-                    aria-label="Type a message"
-                  />
-                  <button
-                    onClick={() => isLoading ? handleStop() : handleSend()}
-                    style={ss.sendBtn(isLoading || (!isInputEmpty && !isLoading))}
-                    aria-label={isLoading ? "Stop generating" : "Send message"}
-                  >
-                    {isLoading ? <Square size={12} fill="currentColor" /> : <ArrowUp size={18} strokeWidth={2.5} />}
-                  </button>
-                </div>
+                {!confirmReset && (
+                  <div style={{ ...ss.inputBar, borderColor: inputFocused ? getPrimaryColor() + "99" : "#e5e7eb", boxShadow: "0 4px 12px rgba(0,0,0,0.15)" }}>
+                    <input
+                      type="text"
+                      value={inputValue}
+                      onChange={(e) => setInputValue(e.target.value)}
+                      onKeyDown={handleKeyDown}
+                      onFocus={() => setInputFocused(true)}
+                      onBlur={() => setInputFocused(false)}
+                      placeholder="Message..."
+                      disabled={isLoading}
+                      style={ss.input}
+                      aria-label="Type a message"
+                    />
+                    <button
+                      onClick={() => isLoading ? handleStop() : handleSend()}
+                      style={ss.sendBtn(isLoading || (!isInputEmpty && !isLoading))}
+                      aria-label={isLoading ? "Stop generating" : "Send message"}
+                    >
+                      {isLoading ? <Square size={12} fill="currentColor" /> : <ArrowUp size={18} strokeWidth={2.5} />}
+                    </button>
+                  </div>
+                )}
 
                 <AnimatePresence>
                   {confirmReset && (
