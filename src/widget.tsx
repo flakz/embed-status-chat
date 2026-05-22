@@ -96,7 +96,14 @@ function ChatWidget() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const abortRef = useRef<AbortController | null>(null);
   const typingAbortRef = useRef(new AbortController());
+  const thinkingStartRef = useRef(0);
   const resetKeyRef = useRef(0);
+
+  const waitMinThinking = async () => {
+    const elapsed = Date.now() - thinkingStartRef.current;
+    const min = 600;
+    if (elapsed < min) await new Promise((r) => setTimeout(r, min - elapsed));
+  };
 
   const handleStop = useCallback(() => {
     abortRef.current?.abort();
@@ -121,6 +128,7 @@ function ChatWidget() {
     abortRef.current = controller;
 
     setIsLoading(true);
+    thinkingStartRef.current = Date.now();
 
     try {
       const res = await fetch(config.webhookUrl, {
@@ -170,6 +178,7 @@ function ChatWidget() {
               }
             }
           }
+          await waitMinThinking();
           setIsLoading(false);
           return;
         }
@@ -182,6 +191,7 @@ function ChatWidget() {
       const steps: AgentStep[] = resp.steps || resp.intermediateSteps || [];
       await animateToolSteps(steps, config.animationSpeed, setMessages);
 
+      await waitMinThinking();
       setIsLoading(false);
 
       if (responseText || genUI) {
@@ -200,6 +210,7 @@ function ChatWidget() {
       ]);
     } finally {
       abortRef.current = null;
+      await waitMinThinking();
       setIsLoading(false);
     }
   }, [inputValue, config]);
