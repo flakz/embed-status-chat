@@ -101,7 +101,7 @@ function ChatWidget() {
 
   const waitMinThinking = async () => {
     const elapsed = Date.now() - thinkingStartRef.current;
-    const min = 600;
+    const min = 400;
     if (elapsed < min) await new Promise((r) => setTimeout(r, min - elapsed));
   };
 
@@ -317,7 +317,7 @@ function ChatWidget() {
                             key={msg.id}
                             initial={{ opacity: 0, y: 4 }}
                             animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, transition: { duration: 0.12 } }}
+                            exit={{ opacity: 0, transition: { duration: 0.08 } }}
                             transition={{ duration: 0.18, ease: "easeOut" }}
                             style={{ marginTop: isRoleChange ? 12 : 0 }}
                           >
@@ -352,7 +352,6 @@ function ChatWidget() {
                           <div style={isUser ? ss.msgRowUser : ss.msgRowBot}>
                             {parts.map((part, pIdx) => (
                               <motion.div
-                                layoutId={isUser && pIdx === 0 ? `suggestion-${msg.text}` : undefined}
                                 key={pIdx}
                                 style={isUser ? ss.bubbleUser : ss.bubbleBot}
                               >
@@ -374,7 +373,7 @@ function ChatWidget() {
                     )}
 
                     {!isLoading && messages.length === 2 && messages[0].role === "system" && (
-                      <motion.div layout key="suggestions" initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, transition: { duration: 0.12 } }} transition={{ duration: 0.18, delay: 0.05, ease: "easeOut" }}>
+                      <motion.div layout key="suggestions" initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, transition: { duration: 0.08 } }} transition={{ duration: 0.18, delay: 0.05, ease: "easeOut" }}>
                         <div style={ss.suggestions}>
                           {config.suggestions.map((s) => (
                             <motion.button layoutId={`suggestion-${s.prompt}`} key={s.prompt} onClick={() => handleSend(s.prompt)} style={ss.suggestBtn}>{s.label}</motion.button>
