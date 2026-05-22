@@ -96,6 +96,7 @@ function ChatWidget() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const abortRef = useRef<AbortController | null>(null);
   const typingAbortRef = useRef(new AbortController());
+  const resetKeyRef = useRef(0);
 
   const handleStop = useCallback(() => {
     abortRef.current?.abort();
@@ -212,6 +213,7 @@ function ChatWidget() {
     abortRef.current?.abort();
     typingAbortRef.current.abort();
     typingAbortRef.current = new AbortController();
+    resetKeyRef.current += 1;
     setMessages([
       { id: crypto.randomUUID(), role: "system", text: config.greeting1 },
       { id: crypto.randomUUID(), role: "system", text: config.greeting2 },
@@ -284,8 +286,8 @@ function ChatWidget() {
               </div>
 
               <div style={{ ...ss.msgArea, opacity: confirmReset ? 0.4 : 1, transition: "opacity 0.25s ease", pointerEvents: confirmReset ? "none" : "auto" }}>
-                <div style={ss.msgList} role="log" aria-live="polite">
-                  <AnimatePresence mode="wait" initial={true}>
+                <div style={ss.msgList} role="log" aria-live="polite" key={resetKeyRef.current}>
+                  <AnimatePresence mode="popLayout" initial={true}>
                     {messages.map((msg, index) => {
                       const prevMsg = index > 0 ? messages[index - 1] : null;
                       const isRoleChange = prevMsg && (prevMsg.role !== msg.role || (prevMsg.role === "system" && msg.role === "model"));
