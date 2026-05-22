@@ -151,4 +151,23 @@ export const ss = {
     outline: "none", transition: "transform 0.2s, box-shadow 0.2s",
   } as React.CSSProperties,
   toggleImg: { width: "100%", height: "100%", objectFit: "cover" } as React.CSSProperties,
+  confirmBar: {
+    marginTop: 10, padding: "12px 16px", background: "#fff",
+    borderRadius: 16, border: "1px solid #e5e7eb",
+    boxShadow: "0 2px 12px rgba(0,0,0,0.08)",
+    display: "flex", alignItems: "center", justifyContent: "space-between",
+    pointerEvents: "auto",
+  } as React.CSSProperties,
+  confirmText: { fontSize: 14, fontWeight: 500, color: "#374151" } as React.CSSProperties,
+  confirmActions: { display: "flex", alignItems: "center", gap: 8 } as React.CSSProperties,
+  confirmCancelBtn: {
+    padding: "6px 16px", borderRadius: 10, border: "1px solid #d1d5db",
+    background: "#fff", color: "#374151", fontSize: 14, fontWeight: 500,
+    cursor: "pointer", fontFamily: "inherit",
+  } as React.CSSProperties,
+  confirmStartBtn: {
+    padding: "6px 16px", borderRadius: 10, border: "none",
+    background: PRIMARY_COLOR, color: "#fff", fontSize: 14, fontWeight: 500,
+    cursor: "pointer", fontFamily: "inherit",
+  } as React.CSSProperties,
 } as const satisfies Record<string, StyleValue>;

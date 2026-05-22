@@ -90,6 +90,7 @@ function ChatWidget() {
   const [inputValue, setInputValue] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
+  const [confirmReset, setConfirmReset] = useState(false);
   const [inputFocused, setInputFocused] = useState(false);
   const sessionIdRef = useRef<string>(crypto.randomUUID());
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -203,7 +204,11 @@ function ChatWidget() {
     if (e.key === "Enter") { e.preventDefault(); handleSend(); }
   }, [handleSend]);
 
-  const handleReset = useCallback(() => {
+  const handleResetClick = useCallback(() => {
+    setConfirmReset(true);
+  }, []);
+
+  const handleConfirmReset = useCallback(() => {
     abortRef.current?.abort();
     typingAbortRef.current.abort();
     typingAbortRef.current = new AbortController();
@@ -213,8 +218,13 @@ function ChatWidget() {
     ]);
     setInputValue("");
     setIsLoading(false);
+    setConfirmReset(false);
     sessionIdRef.current = crypto.randomUUID();
   }, [config]);
+
+  const handleCancelReset = useCallback(() => {
+    setConfirmReset(false);
+  }, []);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -268,12 +278,12 @@ function ChatWidget() {
                   <span style={ss.headerTitle}>{config.brandName}</span>
                 </div>
                 <div style={ss.headerActions}>
-                  <button onClick={handleReset} style={ss.headerBtn} title="Reset chat" aria-label="Reset chat"><RotateCw size={18} strokeWidth={2.5} /></button>
+                  <button onClick={handleResetClick} style={ss.headerBtn} title="Reset chat" aria-label="Reset chat"><RotateCw size={18} strokeWidth={2.5} /></button>
                   <button onClick={() => setIsOpen(false)} style={ss.headerBtn} aria-label="Close chat"><X size={20} strokeWidth={2.5} /></button>
                 </div>
               </div>
 
-              <div style={ss.msgArea}>
+              <div style={{ ...ss.msgArea, opacity: confirmReset ? 0.4 : 1, transition: "opacity 0.25s ease", pointerEvents: confirmReset ? "none" : "auto" }}>
                 <div style={ss.msgList} role="log" aria-live="polite">
                   <AnimatePresence mode="popLayout" initial={true}>
                     {messages.map((msg, index) => {
@@ -382,6 +392,24 @@ function ChatWidget() {
                     {isLoading ? <Square size={12} fill="currentColor" /> : <ArrowUp size={18} strokeWidth={2.5} />}
                   </button>
                 </div>
+
+                <AnimatePresence>
+                  {confirmReset && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 12 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: 12 }}
+                      transition={{ duration: 0.25, ease: "easeOut" }}
+                      style={ss.confirmBar}
+                    >
+                      <span style={ss.confirmText}>Start a new chat?</span>
+                      <div style={ss.confirmActions}>
+                        <button onClick={handleCancelReset} style={ss.confirmCancelBtn}>Cancel</button>
+                        <button onClick={handleConfirmReset} style={ss.confirmStartBtn}>Start New Chat</button>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
             </div>
           </motion.div>
