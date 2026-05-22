@@ -395,7 +395,7 @@ function ChatWidget() {
 
                     {isLoading && (
                       <motion.div layout key="loading-indicator" initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, transition: { duration: 0.12 } }} transition={{ duration: 0.18, ease: "easeOut" }} style={{ marginTop: 12 }}>
-                        <div style={ss.thinking}><Loader2 size={16} style={{ animation: "marno-spin 1s linear infinite", color: "#6b7280" }} /><span>Thinking...</span></div>
+                        <div className="marno-thinking-shimmer" style={ss.thinking}><Loader2 size={16} style={{ animation: "marno-spin 1s linear infinite", color: "#6b7280" }} /><span>Thinking...</span></div>
                       </motion.div>
                     )}
 
@@ -492,6 +492,10 @@ function mount() {
   animStyles.textContent = `
 @keyframes marno-spin { to { transform: rotate(360deg); } }
 @keyframes marno-pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.5; } }
+@keyframes marno-shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
 .marno-md p { margin: 0; }
 .marno-md p:not(:last-child) { margin-bottom: 12px; }
 .marno-md ul, .marno-md ol { margin: 8px 0; padding-left: 20px; }
@@ -501,6 +505,11 @@ function mount() {
 .marno-tool-spinner {
   animation: marno-spin 1s linear infinite;
   width: 14px; height: 14px; flex-shrink: 0;
+}
+.marno-thinking-shimmer {
+  background: linear-gradient(110deg, #F0F2F5 30%, #E5E7EB 50%, #F0F2F5 70%);
+  background-size: 200% 100%;
+  animation: marno-shimmer 1.8s ease-in-out infinite;
 }
 `;
   document.head.appendChild(animStyles);
