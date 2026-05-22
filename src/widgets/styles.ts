@@ -28,7 +28,7 @@ export const PRIMARY_LIGHT = getPrimaryLight();
 
 const Z_INDEX = { toggle: 2147483646, panel: 2147483647 } as const;
 
-export type StyleValue = React.CSSProperties | ((...args: boolean[]) => React.CSSProperties);
+export type StyleValue = React.CSSProperties | ((...args: (string | number | boolean | undefined)[]) => React.CSSProperties);
 
 export const ss = {
   panel: {
@@ -120,12 +120,12 @@ export const ss = {
     borderRadius: 10, padding: "8px 14px", fontSize: 14.5, fontWeight: 500,
     cursor: "pointer", fontFamily: "inherit", outline: "none",
   } as React.CSSProperties,
-  inputWrap: {
+  inputWrap: (confirming?: boolean): React.CSSProperties => ({
     position: "absolute", bottom: 0, left: 0, right: 0, zIndex: 20,
     padding: "44px 16px 16px",
-    background: "linear-gradient(to top, #fff 0%, rgba(255,255,255,0.95) 40%, transparent 100%)",
+    background: confirming ? "transparent" : "linear-gradient(to top, #fff 0%, rgba(255,255,255,0.95) 40%, transparent 100%)",
     pointerEvents: "none",
-  } as React.CSSProperties,
+  }),
   inputBar: {
     position: "relative", display: "flex", alignItems: "center",
     borderRadius: 9999, background: "#fff", border: "2px solid #e5e7eb",

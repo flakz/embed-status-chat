@@ -401,7 +401,7 @@ function ChatWidget() {
                 <div ref={messagesEndRef} />
               </div>
 
-              <div style={ss.inputWrap}>
+              <div style={ss.inputWrap(confirmReset)}>
                 <AnimatePresence mode="wait">
                   {confirmReset ? (
                     <motion.div
