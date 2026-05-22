@@ -395,7 +395,7 @@ function ChatWidget() {
 
                     {isLoading && (
                       <motion.div layout key="loading-indicator" initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, transition: { duration: 0.12 } }} transition={{ duration: 0.18, ease: "easeOut" }} style={{ marginTop: 12 }}>
-                        <div style={ss.thinking}><div className="marno-spinner-shimmer" /><span className="marno-thinking-shimmer">Thinking...</span></div>
+                        <div style={ss.thinking}><Loader2 size={14} style={{ animation: "marno-spin 1s linear infinite", color: "#6b7280" }} /><span className="marno-thinking-shimmer">Thinking...</span></div>
                       </motion.div>
                     )}
 
@@ -496,10 +496,6 @@ function mount() {
   0% { background-position: 200% 0; }
   100% { background-position: -200% 0; }
 }
-@keyframes marno-shimmer-spin {
-  0% { background-position: 200% 0; transform: rotate(0deg); }
-  100% { background-position: -200% 0; transform: rotate(360deg); }
-}
 .marno-md p { margin: 0; }
 .marno-md p:not(:last-child) { margin-bottom: 12px; }
 .marno-md ul, .marno-md ol { margin: 8px 0; padding-left: 20px; }
@@ -517,21 +513,6 @@ function mount() {
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
-}
-.marno-spinner-shimmer {
-  display: flex; align-items: center; justify-content: center;
-  width: 16px; height: 16px; flex-shrink: 0;
-  background: linear-gradient(110deg, #6b7280 30%, #9ca3af 50%, #6b7280 70%);
-  background-size: 200% 100%;
-  animation: marno-shimmer-spin 1.8s ease-in-out infinite;
-  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M21 12a9 9 0 1 1-6.219-8.56'%3E%3C/path%3E%3C/svg%3E");
-  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M21 12a9 9 0 1 1-6.219-8.56'%3E%3C/path%3E%3C/svg%3E");
-  -webkit-mask-size: contain;
-  mask-size: contain;
-  -webkit-mask-repeat: no-repeat;
-  mask-repeat: no-repeat;
-  -webkit-mask-position: center;
-  mask-position: center;
 }
 `;
   document.head.appendChild(animStyles);
