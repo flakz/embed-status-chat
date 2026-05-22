@@ -1,5 +1,5 @@
 import { motion } from "motion/react";
-import { ss, PRIMARY_COLOR } from "../styles";
+import { ss, getPrimaryColor } from "../styles";
 import { formatPrice, fmtDate } from "../format";
 import type { Order } from "../types";
 
@@ -14,7 +14,7 @@ export default function OrdersCard({ orders }: { orders: Order[] }) {
       {orders.map((order, idx) => (
         <div key={idx} style={ss.bookingCard}>
           <div style={ss.bookingRow}><span style={ss.bookingLabel}>Order</span><span style={ss.bookingValue}>{order.name}</span></div>
-          <div style={ss.bookingRow}><span style={ss.bookingLabel}>Total</span><span style={{ ...ss.bookingValue, color: PRIMARY_COLOR }}>{formatPrice(order.total_price)}</span></div>
+          <div style={ss.bookingRow}><span style={ss.bookingLabel}>Total</span><span style={{ ...ss.bookingValue, color: getPrimaryColor() }}>{formatPrice(order.total_price)}</span></div>
           <div style={ss.bookingRow}><span style={ss.bookingLabel}>Date</span><span style={ss.bookingValue}>{fmtDate(order.created_at)}</span></div>
           {order.status && <div style={{ ...ss.bookingDetail, marginTop: 6, textTransform: "capitalize" }}>{order.status}</div>}
         </div>

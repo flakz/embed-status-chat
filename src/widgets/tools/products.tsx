@@ -1,5 +1,5 @@
 import { motion } from "motion/react";
-import { ss, PRIMARY_COLOR } from "../styles";
+import { ss, getPrimaryColor } from "../styles";
 import { formatPrice } from "../format";
 import type { ProductItem } from "../types";
 
@@ -21,7 +21,7 @@ export default function ProductsCard({ products }: { products: ProductItem[] }) 
             {item.price && <div style={ss.productPrice}>{formatPrice(item.price)}</div>}
             {item.description && <div style={ss.productDesc}>{item.description}</div>}
             {item.handle && storeUrl && (
-              <a href={`${storeUrl}/products/${item.handle}`} target="_blank" rel="noopener noreferrer" style={{ fontSize: 12, color: PRIMARY_COLOR, textDecoration: "none", fontWeight: 500 }}>
+              <a href={`${storeUrl}/products/${item.handle}`} target="_blank" rel="noopener noreferrer" style={{ fontSize: 12, color: getPrimaryColor(), textDecoration: "none", fontWeight: 500 }}>
                 View product →
               </a>
             )}

@@ -1,5 +1,5 @@
 import { motion } from "motion/react";
-import { ss, PRIMARY_COLOR } from "../styles";
+import { ss, getPrimaryColor } from "../styles";
 import { fmtDate, fmtTime } from "../format";
 import type { Booking } from "../types";
 
@@ -33,7 +33,7 @@ export default function BookingCard({ booking }: { booking: Booking }) {
         {booking.start && booking.end && <div style={ss.bookingRow}><span style={ss.bookingLabel}>Time</span><span style={ss.bookingValue}>{fmtTime(booking.start, booking.end)}</span></div>}
         {booking.description && <div style={ss.bookingDetail}>{booking.description}</div>}
         {booking.meet_url && (
-          <a href={booking.meet_url} target="_blank" rel="noopener noreferrer" style={{ fontSize: 13, color: PRIMARY_COLOR, textDecoration: "none", fontWeight: 600, padding: "8px 0", background: PRIMARY_COLOR + "12", borderRadius: 8, display: "block", width: "100%", textAlign: "center", marginTop: 10 }}>
+          <a href={booking.meet_url} target="_blank" rel="noopener noreferrer" style={{ fontSize: 13, color: getPrimaryColor(), textDecoration: "none", fontWeight: 600, padding: "8px 0", background: getPrimaryColor() + "12", borderRadius: 8, display: "block", width: "100%", textAlign: "center", marginTop: 10 }}>
             Join Google Meet →
           </a>
         )}
