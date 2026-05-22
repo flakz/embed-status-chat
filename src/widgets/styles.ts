@@ -55,9 +55,9 @@ export const ss: Record<string, StyleValue> = {
     flex: 1, minHeight: 0, overflowY: "auto", display: "flex", flexDirection: "column",
     padding: "24px 16px 112px", scrollbarWidth: "none",
   } as React.CSSProperties,
-  msgList: { display: "flex", flexDirection: "column", gap: 6, width: "100%", position: "relative" } as React.CSSProperties,
-  msgRowUser: { display: "flex", flexDirection: "column", gap: 6, width: "100%", alignItems: "flex-end" } as React.CSSProperties,
-  msgRowBot: { display: "flex", flexDirection: "column", gap: 6, width: "100%", alignItems: "flex-start" } as React.CSSProperties,
+  msgList: { display: "flex", flexDirection: "column", gap: 4, width: "100%", position: "relative" } as React.CSSProperties,
+  msgRowUser: { display: "flex", flexDirection: "column", gap: 4, width: "100%", alignItems: "flex-end" } as React.CSSProperties,
+  msgRowBot: { display: "flex", flexDirection: "column", gap: 4, width: "100%", alignItems: "flex-start" } as React.CSSProperties,
   bubbleBot: {
     padding: "8px 16px", borderRadius: 12, borderBottomLeftRadius: 4,
     fontSize: 14, width: "fit-content", maxWidth: "88%", lineHeight: 1.375,
@@ -66,7 +66,7 @@ export const ss: Record<string, StyleValue> = {
   thinking: {
     display: "flex", alignItems: "center", gap: 8,
     padding: "8px 16px", borderRadius: 12, borderBottomLeftRadius: 4,
-    fontSize: 15, width: "fit-content", maxWidth: "88%",
+    fontSize: 13.5, width: "fit-content", maxWidth: "88%",
     background: "#F0F2F5", color: "#9ca3af", overflow: "hidden",
   } as React.CSSProperties,
   toolCardDone: {
@@ -116,7 +116,7 @@ export const ss: Record<string, StyleValue> = {
   input: {
     flex: 1, background: "transparent", border: "none", outline: "none",
     color: "#111827",
-    padding: "10px 44px 10px 20px", fontSize: 15, fontFamily: "inherit",
+    padding: "10px 44px 10px 20px", fontSize: 14, fontFamily: "inherit",
     resize: "none", overflowY: "auto", maxHeight: 120,
     lineHeight: 1.4,
   } as React.CSSProperties,
@@ -172,7 +172,7 @@ Object.defineProperties(ss, {
       return {
         display: "flex", alignItems: "center", gap: 8,
         padding: "6px 14px", borderRadius: 12, borderBottomLeftRadius: 4,
-        fontSize: 14, width: "fit-content", maxWidth: "88%",
+        fontSize: 13.5, width: "fit-content", maxWidth: "88%",
         background: getPrimaryLight(), color: c,
         border: `1px solid ${c}20`,
       };
