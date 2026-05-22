@@ -99,6 +99,17 @@ function ChatWidget() {
   const typingAbortRef = useRef(new AbortController());
   const thinkingStartRef = useRef(0);
   const resetKeyRef = useRef(0);
+  const configRef = useRef(config);
+  configRef.current = config;
+
+  // Reset greetings when config changes
+  useEffect(() => {
+    setMessages([
+      { id: crypto.randomUUID(), role: "system", text: config.greeting1 },
+      { id: crypto.randomUUID(), role: "system", text: config.greeting2 },
+    ]);
+    sessionIdRef.current = crypto.randomUUID();
+  }, [config.greeting1, config.greeting2]);
 
   const waitMinThinking = async () => {
     const elapsed = Date.now() - thinkingStartRef.current;
@@ -132,10 +143,10 @@ function ChatWidget() {
     thinkingStartRef.current = Date.now();
 
     try {
-      const res = await fetch(config.webhookUrl, {
+      const res = await fetch(configRef.current.webhookUrl, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ query: trimmed, sessionId: sessionIdRef.current, slug: config.kbSlug, instructId: config.instructId }),
+        body: JSON.stringify({ query: trimmed, sessionId: sessionIdRef.current, slug: configRef.current.kbSlug, instructId: configRef.current.instructId }),
         signal: controller.signal,
       });
 
@@ -190,7 +201,7 @@ function ChatWidget() {
       const responseText = getResponseText(genUI, resp);
 
       const steps: AgentStep[] = resp.steps || resp.intermediateSteps || [];
-      await animateToolSteps(steps, config.animationSpeed, setMessages);
+      await animateToolSteps(steps, configRef.current.animationSpeed, setMessages);
 
       await waitMinThinking();
       setIsLoading(false);
@@ -214,7 +225,7 @@ function ChatWidget() {
       await waitMinThinking();
       setIsLoading(false);
     }
-  }, [inputValue, config]);
+  }, [inputValue]);
 
   const handleResetClick = useCallback(() => {
     setRotateKey((k) => k + 1);
@@ -227,14 +238,14 @@ function ChatWidget() {
     typingAbortRef.current = new AbortController();
     resetKeyRef.current += 1;
     setMessages([
-      { id: crypto.randomUUID(), role: "system", text: config.greeting1 },
-      { id: crypto.randomUUID(), role: "system", text: config.greeting2 },
+      { id: crypto.randomUUID(), role: "system", text: configRef.current.greeting1 },
+      { id: crypto.randomUUID(), role: "system", text: configRef.current.greeting2 },
     ]);
     setInputValue("");
     setIsLoading(false);
     setConfirmReset(false);
     sessionIdRef.current = crypto.randomUUID();
-  }, [config]);
+  }, []);
 
   const handleCancelReset = useCallback(() => {
     setConfirmReset(false);
