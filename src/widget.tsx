@@ -451,13 +451,15 @@ function ChatWidget() {
                         style={ss.input}
                         aria-label="Type a message"
                       />
-                      <button
-                        onClick={() => isLoading ? handleStop() : handleSend()}
-                        style={ss.sendBtn(isLoading || (!isInputEmpty && !isLoading))}
-                        aria-label={isLoading ? "Stop generating" : "Send message"}
-                      >
-                        {isLoading ? <svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor"><rect x="1" y="1" width="10" height="10" rx="3" /></svg> : <ArrowUp size={18} strokeWidth={2.5} />}
-                      </button>
+                      <div style={ss.sendBtnWrap}>
+                        <button
+                          onClick={() => isLoading ? handleStop() : handleSend()}
+                          style={ss.sendBtn(isLoading || (!isInputEmpty && !isLoading))}
+                          aria-label={isLoading ? "Stop generating" : "Send message"}
+                        >
+                          {isLoading ? <svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor"><rect x="1" y="1" width="10" height="10" rx="3" /></svg> : <ArrowUp size={18} strokeWidth={2.5} />}
+                        </button>
+                      </div>
                     </motion.div>
                   )}
                 </AnimatePresence>
