@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback, type KeyboardEvent } from "react";
 import { createRoot } from "react-dom/client";
-import { RotateCw, X, ArrowUp, Loader2, Check, Square } from "lucide-react";
+import { RotateCw, X, ArrowUp, Loader2, Check } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import ReactMarkdown from "react-markdown";
 import remarkBreaks from "remark-breaks";
@@ -426,7 +426,7 @@ function ChatWidget() {
                         style={ss.sendBtn(isLoading || (!isInputEmpty && !isLoading))}
                         aria-label={isLoading ? "Stop generating" : "Send message"}
                       >
-                        {isLoading ? <Square size={12} fill="currentColor" /> : <ArrowUp size={18} strokeWidth={2.5} />}
+                        {isLoading ? <svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor"><rect x="1" y="1" width="10" height="10" rx="2" /></svg> : <ArrowUp size={18} strokeWidth={2.5} />}
                       </button>
                     </motion.div>
                   )}
