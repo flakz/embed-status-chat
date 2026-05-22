@@ -134,7 +134,7 @@ export const ss = {
   input: {
     width: "100%", background: "transparent", border: "none", outline: "none",
     color: "#111827", borderRadius: 20,
-    padding: "12px 48px 12px 20px", fontSize: 15, fontFamily: "inherit",
+    padding: "10px 48px 10px 20px", fontSize: 15, fontFamily: "inherit",
     resize: "none", overflowY: "auto", maxHeight: 120,
     lineHeight: 1.4,
   } as React.CSSProperties,
