@@ -97,6 +97,14 @@ function ChatWidget() {
       textareaRef.current.style.height = textareaRef.current.scrollHeight + "px";
     }
   }, [inputValue]);
+
+  // Update font when config changes
+  useEffect(() => {
+    const fontLink = document.getElementById("marno-font-link") as HTMLLinkElement | null;
+    if (fontLink) fontLink.href = `https://fonts.googleapis.com/css2?family=${config.fontFamily.replace(/ /g, "+")}:wght@400;500;600;700&display=swap`;
+    const fontOverride = document.getElementById("marno-font-override") as HTMLStyleElement | null;
+    if (fontOverride) fontOverride.textContent = `#marno-widget-root, #marno-widget-root * { font-family: "${config.fontFamily}", ui-sans-serif, system-ui, sans-serif !important; }`;
+  }, [config.fontFamily]);
   const [isLoading, setIsLoading] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const [confirmReset, setConfirmReset] = useState(false);
@@ -545,11 +553,13 @@ async function mount() {
   const config = getConfig();
 
   const fontLink = document.createElement("link");
+  fontLink.id = "marno-font-link";
   fontLink.rel = "stylesheet";
   fontLink.href = `https://fonts.googleapis.com/css2?family=${config.fontFamily.replace(/ /g, "+")}:wght@400;500;600;700&display=swap`;
   document.head.appendChild(fontLink);
 
   const fontOverride = document.createElement("style");
+  fontOverride.id = "marno-font-override";
   fontOverride.textContent = `#marno-widget-root, #marno-widget-root * { font-family: "${config.fontFamily}", ui-sans-serif, system-ui, sans-serif !important; }`;
   document.head.appendChild(fontOverride);
 
