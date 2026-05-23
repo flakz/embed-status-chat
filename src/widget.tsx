@@ -95,7 +95,6 @@ function ChatWidget() {
     if (inputValue === "" && textareaRef.current) {
       textareaRef.current.style.height = "0";
       textareaRef.current.style.height = textareaRef.current.scrollHeight + "px";
-      textareaRef.current.style.overflowY = "hidden";
     }
   }, [inputValue]);
   const [isLoading, setIsLoading] = useState(false);
@@ -481,9 +480,7 @@ function ChatWidget() {
                           setInputValue(e.target.value);
                           const el = e.target;
                           el.style.height = "0";
-                          const newHeight = Math.min(el.scrollHeight, 120);
-                          el.style.height = newHeight + "px";
-                          el.style.overflowY = el.scrollHeight > 120 ? "auto" : "hidden";
+                          el.style.height = Math.min(el.scrollHeight, 120) + "px";
                         }}
                         onKeyDown={(e) => {
                           if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSend(); }
@@ -568,6 +565,7 @@ async function mount() {
 .marno-md ul { list-style: disc; }
 .marno-md ol { list-style: decimal; }
 .marno-md strong { font-weight: 600; }
+#marno-widget-root textarea::-webkit-scrollbar { display: none; }
 .marno-tool-spinner {
   animation: marno-spin 1s linear infinite;
   width: 14px; height: 14px; flex-shrink: 0;
