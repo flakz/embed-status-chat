@@ -98,7 +98,7 @@ export const ss: Record<string, StyleValue> = {
   inputBar: {
     position: "relative", display: "flex", alignItems: "center",
     borderRadius: 24, background: "#fff", border: "2px solid #e5e7eb",
-    pointerEvents: "auto", padding: "10px 52px 10px 0",
+    pointerEvents: "auto", padding: "10px 40px 10px 0",
   } as React.CSSProperties,
   sendBtn: (active: boolean): React.CSSProperties => ({
     position: "absolute", bottom: 5, right: 5,
