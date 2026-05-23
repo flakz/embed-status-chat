@@ -12,8 +12,8 @@ export function getPrimaryColor(): string {
   return window.MarnoChatConfig?.primaryColor || "#0D72FF";
 }
 
-type FontSizes = { chatBubble?: number; thinking?: number; suggestionBtn?: number; input?: number; label?: number; msgGap?: number; btnGap?: number; btnGapV?: number; btnMarginTop?: number };
-const DEFAULT_FONT_SIZES: Required<FontSizes> = { chatBubble: 14, thinking: 13.5, suggestionBtn: 13.5, input: 14, label: 13, msgGap: 6, btnGap: 8, btnGapV: 8, btnMarginTop: 7 };
+type FontSizes = { chatBubble?: number; thinking?: number; suggestionBtn?: number; input?: number; label?: number; msgGap?: number; btnGap?: number; btnGapV?: number; btnMarginTop?: number; roleGap?: number };
+const DEFAULT_FONT_SIZES: Required<FontSizes> = { chatBubble: 14, thinking: 13.5, suggestionBtn: 13.5, input: 14, label: 13, msgGap: 6, btnGap: 8, btnGapV: 8, btnMarginTop: 7, roleGap: 12 };
 export function getFontSizes(): Required<FontSizes> {
   const fs = (window.MarnoChatConfig as Record<string, unknown>)?.fontSizes as FontSizes | undefined;
   return { ...DEFAULT_FONT_SIZES, ...fs };

@@ -385,7 +385,7 @@ function ChatWidget() {
                             animate={{ opacity: 1, y: 0 }}
                             exit={{ opacity: 0, transition: { duration: 0.08 } }}
                             transition={{ duration: 0.18, ease: "easeOut" }}
-                            style={{ marginTop: isRoleChange ? 12 : 0 }}
+                            style={{ marginTop: isRoleChange ? Math.round(fs.roleGap * gapScale) : 0 }}
                           >
                             <div style={ss.msgRowBot}>
                               <div style={cardStyle as React.CSSProperties}>
@@ -413,7 +413,7 @@ function ChatWidget() {
                           animate={{ opacity: 1, y: 0 }}
                           exit={{ opacity: 0, transition: { duration: 0.12 } }}
                           transition={{ duration: 0.18, ease: "easeOut" }}
-                          style={{ marginTop: isRoleChange ? 12 : 0 }}
+                          style={{ marginTop: isRoleChange ? Math.round(fs.roleGap * gapScale) : 0 }}
                         >
                           <div style={isUser ? ss.msgRowUser : ss.msgRowBot}>
                             {parts.map((part, pIdx) => (

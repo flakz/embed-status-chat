@@ -97,7 +97,7 @@ declare global {
       primaryColor?: string;
       toggleIcon?: string;
       fontFamily?: string;
-      fontSizes?: { chatBubble?: number; thinking?: number; suggestionBtn?: number; input?: number; label?: number; msgGap?: number; btnGap?: number; btnGapV?: number; btnMarginTop?: number };
+      fontSizes?: { chatBubble?: number; thinking?: number; suggestionBtn?: number; input?: number; label?: number; msgGap?: number; btnGap?: number; btnGapV?: number; btnMarginTop?: number; roleGap?: number };
       suggestions?: { label: string; prompt: string }[];
       greetings?: [string, string];
       storeUrl?: string;
