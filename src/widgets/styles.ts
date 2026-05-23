@@ -88,17 +88,15 @@ export const ss: Record<string, StyleValue> = {
     WebkitLineClamp: 2, display: "-webkit-box", WebkitBoxOrient: "vertical", maxHeight: 32,
   } as React.CSSProperties,
   suggestions: {
-    get: (): React.CSSProperties => {
-      const scale = getFontSizes().chatBubble / 14;
-      return { display: "flex", flexWrap: "wrap", gap: Math.round(8 * scale), marginTop: Math.round(8 * scale), width: "100%" };
-    },
+    get: (): React.CSSProperties => ({
+      display: "flex", flexWrap: "wrap", gap: 8, marginTop: 8, width: "100%",
+    }),
     enumerable: true,
   },
   msgList: {
-    get: (): React.CSSProperties => {
-      const scale = getFontSizes().chatBubble / 14;
-      return { display: "flex", flexDirection: "column", gap: Math.round(4 * scale), width: "100%", position: "relative" };
-    },
+    get: (): React.CSSProperties => ({
+      display: "flex", flexDirection: "column", gap: 4, width: "100%", position: "relative",
+    }),
     enumerable: true,
   },
   inputWrap: (confirming?: boolean): React.CSSProperties => ({
