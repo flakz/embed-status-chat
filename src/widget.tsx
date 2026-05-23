@@ -93,7 +93,7 @@ function ChatWidget() {
   // Reset textarea height when input is cleared
   useEffect(() => {
     if (inputValue === "" && textareaRef.current) {
-      textareaRef.current.style.height = "auto";
+      textareaRef.current.style.height = "0";
     }
   }, [inputValue]);
   const [isLoading, setIsLoading] = useState(false);
@@ -478,7 +478,7 @@ function ChatWidget() {
                         onChange={(e) => {
                           setInputValue(e.target.value);
                           const el = e.target;
-                          el.style.height = "auto";
+                          el.style.height = "0";
                           el.style.height = Math.min(el.scrollHeight, 120) + "px";
                         }}
                         onKeyDown={(e) => {
