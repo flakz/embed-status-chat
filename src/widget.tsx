@@ -307,7 +307,8 @@ function ChatWidget() {
   }, []);
 
   const isInputEmpty = inputValue.trim().length === 0;
-  const gapScale = getFontSizes().chatBubble / 14;
+  const fs = getFontSizes();
+  const gapScale = fs.chatBubble / 14;
 
   return (
     <>
@@ -365,7 +366,7 @@ function ChatWidget() {
               </div>
 
               <div style={{ ...ss.msgArea, pointerEvents: confirmReset ? "none" : "auto" }}>
-                <div style={{ ...ss.msgList, gap: Math.round(4 * gapScale) }} role="log" aria-live="polite" key={resetKeyRef.current}>
+                <div style={{ ...ss.msgList, gap: Math.round(fs.msgGap * gapScale) }} role="log" aria-live="polite" key={resetKeyRef.current}>
                   <AnimatePresence mode="popLayout" initial={true}>
                     {messages.map((msg, index) => {
                       const prevMsg = index > 0 ? messages[index - 1] : null;
@@ -439,7 +440,7 @@ function ChatWidget() {
 
                     {!isLoading && messages.length === 2 && messages[0].role === "system" && (
                       <motion.div layout key="suggestions" initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, transition: { duration: 0.08 } }} transition={{ duration: 0.18, delay: 0.05, ease: "easeOut" }}>
-                        <div style={{ ...ss.suggestions, gap: Math.round(8 * gapScale), marginTop: Math.round(3 * gapScale) }}>
+                        <div style={{ ...ss.suggestions, columnGap: Math.round(fs.btnGap * gapScale), rowGap: Math.round(fs.btnGapV * gapScale), marginTop: Math.round(fs.btnMarginTop * gapScale) }}>
                           {config.suggestions.map((s) => (
                             <motion.button layoutId={`suggestion-${s.prompt}`} key={s.prompt} onClick={() => handleSend(s.prompt)} style={ss.suggestBtn}>{s.label}</motion.button>
                           ))}
