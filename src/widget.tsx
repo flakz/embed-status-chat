@@ -439,7 +439,7 @@ function ChatWidget() {
 
                     {!isLoading && messages.length === 2 && messages[0].role === "system" && (
                       <motion.div layout key="suggestions" initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, transition: { duration: 0.08 } }} transition={{ duration: 0.18, delay: 0.05, ease: "easeOut" }}>
-                        <div style={{ ...ss.suggestions, gap: Math.round(8 * gapScale), marginTop: Math.round(7 * gapScale) }}>
+                        <div style={{ ...ss.suggestions, gap: Math.round(8 * gapScale), marginTop: Math.round(3 * gapScale) }}>
                           {config.suggestions.map((s) => (
                             <motion.button layoutId={`suggestion-${s.prompt}`} key={s.prompt} onClick={() => handleSend(s.prompt)} style={ss.suggestBtn}>{s.label}</motion.button>
                           ))}
