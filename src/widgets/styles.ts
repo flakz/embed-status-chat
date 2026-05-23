@@ -98,7 +98,7 @@ export const ss: Record<string, StyleValue> = {
   inputBar: {
     position: "relative", display: "flex", alignItems: "center",
     borderRadius: 24, background: "#fff", border: "2px solid #e5e7eb",
-    pointerEvents: "auto",
+    pointerEvents: "auto", padding: "0 52px 0 0",
   } as React.CSSProperties,
   sendBtn: (active: boolean): React.CSSProperties => ({
     position: "absolute", bottom: 5, right: 5,
@@ -192,7 +192,7 @@ Object.defineProperties(ss, {
     get: (): React.CSSProperties => ({
       flex: 1, background: "transparent", border: "none", outline: "none",
       color: "#111827",
-      padding: "10px 44px 10px 20px", fontSize: getFontSizes().input, fontFamily: "inherit",
+      padding: "10px 0px 10px 20px", fontSize: getFontSizes().input, fontFamily: "inherit",
       resize: "none", overflowY: "scroll", maxHeight: 120,
       lineHeight: 1.4, boxSizing: "border-box" as const,
       scrollbarWidth: "none" as const, msOverflowStyle: "none" as const,
