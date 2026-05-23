@@ -89,7 +89,7 @@ export const ss: Record<string, StyleValue> = {
   } as React.CSSProperties,
   suggestions: {
     get: (): React.CSSProperties => ({
-      display: "flex", flexWrap: "wrap", gap: 8, marginTop: 8, width: "100%",
+      display: "flex", flexWrap: "wrap", gap: 8, marginTop: Math.round((getFontSizes().chatBubble / 14) * 8), width: "100%",
     }),
     enumerable: true,
   },
