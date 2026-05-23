@@ -85,7 +85,7 @@ function ChatWidget() {
   const [config, setConfig] = useState(getConfig);
   const [messages, setMessages] = useState<Message[]>(() => [
     { id: crypto.randomUUID(), role: "system", text: config.greeting1 },
-    { id: crypto.randomUUID(), role: "system", text: config.greeting2 },
+    ...(config.greeting2 ? [{ id: crypto.randomUUID(), role: "system" as const, text: config.greeting2 }] : []),
   ]);
   const [inputValue, setInputValue] = useState("");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -123,7 +123,7 @@ function ChatWidget() {
   useEffect(() => {
     setMessages([
       { id: crypto.randomUUID(), role: "system", text: config.greeting1 },
-      { id: crypto.randomUUID(), role: "system", text: config.greeting2 },
+      ...(config.greeting2 ? [{ id: crypto.randomUUID(), role: "system" as const, text: config.greeting2 }] : []),
     ]);
     sessionIdRef.current = crypto.randomUUID();
   }, [config.greeting1, config.greeting2]);
@@ -256,7 +256,7 @@ function ChatWidget() {
     resetKeyRef.current += 1;
     setMessages([
       { id: crypto.randomUUID(), role: "system", text: configRef.current.greeting1 },
-      { id: crypto.randomUUID(), role: "system", text: configRef.current.greeting2 },
+      ...(configRef.current.greeting2 ? [{ id: crypto.randomUUID(), role: "system" as const, text: configRef.current.greeting2 }] : []),
     ]);
     setInputValue("");
     setIsLoading(false);
@@ -446,7 +446,7 @@ function ChatWidget() {
                       </motion.div>
                     )}
 
-                    {!isLoading && messages.length === 2 && messages[0].role === "system" && (
+                    {!isLoading && messages.length > 0 && messages.every((m) => m.role === "system") && (
                       <motion.div layout key="suggestions" initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, transition: { duration: 0.08 } }} transition={{ duration: 0.18, delay: 0.05, ease: "easeOut" }}>
                         <div style={{ ...ss.suggestions, columnGap: Math.round(fs.btnGap * gapScale), rowGap: Math.round(fs.btnGapV * gapScale), marginTop: Math.round(fs.btnMarginTop * gapScale) }}>
                           {config.suggestions.map((s) => (
