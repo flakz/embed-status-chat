@@ -96,7 +96,7 @@ export const ss: Record<string, StyleValue> = {
     pointerEvents: "none",
   }),
   inputBar: {
-    position: "relative", display: "flex", alignItems: "center",
+    position: "relative", display: "flex", alignItems: "flex-end",
     borderRadius: 24, background: "#fff", border: "2px solid #e5e7eb",
     pointerEvents: "auto",
   } as React.CSSProperties,
