@@ -490,7 +490,7 @@ function ChatWidget() {
                           setInputValue(e.target.value);
                           const el = e.target;
                           el.style.height = "0";
-                          el.style.height = Math.min(el.scrollHeight, 120) + "px";
+                          el.style.height = Math.min(el.scrollHeight, 100) + "px";
                         }}
                         onKeyDown={(e) => {
                           if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSend(); }
