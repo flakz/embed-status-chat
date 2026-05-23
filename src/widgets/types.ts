@@ -87,6 +87,8 @@ export interface WebhookResponse {
 declare global {
   interface Window {
     MarnoChatConfig?: {
+      clientId?: string;
+      runtimeUrl?: string;
       webhookUrl?: string;
       kbSlug?: string;
       instructId?: string;
@@ -95,6 +97,7 @@ declare global {
       primaryColor?: string;
       toggleIcon?: string;
       fontFamily?: string;
+      fontSizes?: { chatBubble?: number; thinking?: number; suggestionBtn?: number; input?: number; label?: number };
       suggestions?: { label: string; prompt: string }[];
       greetings?: [string, string];
       storeUrl?: string;

@@ -520,7 +520,25 @@ function ChatWidget() {
   );
 }
 
-function mount() {
+async function initConfig(): Promise<void> {
+  const c = window.MarnoChatConfig;
+  if (!c?.clientId || !c?.runtimeUrl) return;
+  try {
+    const res = await fetch(`${c.runtimeUrl}/api/widget?client=${c.clientId}`);
+    if (!res.ok) return;
+    const remote = await res.json();
+    window.MarnoChatConfig = {
+      ...remote,
+      clientId: c.clientId,
+      runtimeUrl: c.runtimeUrl,
+    } as typeof window.MarnoChatConfig;
+  } catch {
+    // Config fetch failed — fall back to whatever is in MarnoChatConfig
+  }
+}
+
+async function mount() {
+  await initConfig();
   const config = getConfig();
 
   const fontLink = document.createElement("link");
@@ -585,7 +603,7 @@ function mount() {
 }
 
 if (document.readyState === "loading") {
-  document.addEventListener("DOMContentLoaded", mount);
+  document.addEventListener("DOMContentLoaded", () => mount());
 } else {
   mount();
 }
