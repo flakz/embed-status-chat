@@ -94,6 +94,8 @@ function ChatWidget() {
   useEffect(() => {
     if (inputValue === "" && textareaRef.current) {
       textareaRef.current.style.height = "0";
+      textareaRef.current.style.height = textareaRef.current.scrollHeight + "px";
+      textareaRef.current.style.overflowY = "hidden";
     }
   }, [inputValue]);
   const [isLoading, setIsLoading] = useState(false);
@@ -479,7 +481,9 @@ function ChatWidget() {
                           setInputValue(e.target.value);
                           const el = e.target;
                           el.style.height = "0";
-                          el.style.height = Math.min(el.scrollHeight, 120) + "px";
+                          const newHeight = Math.min(el.scrollHeight, 120);
+                          el.style.height = newHeight + "px";
+                          el.style.overflowY = el.scrollHeight > 120 ? "auto" : "hidden";
                         }}
                         onKeyDown={(e) => {
                           if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSend(); }
